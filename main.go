@@ -1,8 +1,8 @@
 package main
 
 import (
-	"./crawler"
 	"fmt"
+	"github.com/mantaspet/sc2hub-server/crawler"
 )
 
 func main() {
