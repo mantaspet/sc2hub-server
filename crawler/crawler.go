@@ -2,6 +2,7 @@ package crawler
 
 import (
 	"fmt"
+	"github.com/mantaspet/sc2hub-server/types"
 	"golang.org/x/net/html"
 	"io/ioutil"
 	"log"
@@ -10,23 +11,9 @@ import (
 	"time"
 )
 
-type event struct {
-	title string
-	stage string
-	date  string
-	time  string
-}
-
-func Crawl() {
-	fmt.Printf("Begin crawling\n")
-	events := teamliquid()
-	for _, e := range events {
-		fmt.Printf("%v\n", e)
-	}
-}
-
-func teamliquid() []event {
-	var events []event
+func TeamliquidEvents() []types.Event {
+	start := time.Now()
+	var events []types.Event
 	year, month, day := time.Now().Date()
 	url := fmt.Sprintf("https://www.teamliquid.net/calendar/?view=month&year=%v&month=%v&day=%v&game=1", year, int(month), day)
 	resp, err := http.Get(url)
@@ -90,9 +77,9 @@ func teamliquid() []event {
 				days[i] = fmt.Sprintf("0%v", days[i])
 			}
 			date := fmt.Sprintf("%v-%v-%v", year, monthno, days[i])
-			events = append(events, event{title: titles[i], stage: stages[i], date: date, time: times[i]})
+			events = append(events, types.Event{Title: titles[i], Stage: stages[i], Date: date, Time: times[i]})
 		}
 	}
-
+	fmt.Printf("Successfully crawled teamliquid.net events. Elapsed time: %v\n", time.Since(start))
 	return events
 }
