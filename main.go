@@ -7,5 +7,5 @@ import (
 
 func main() {
 	fmt.Println("Hello from sc2hub")
-	crawler.Crawl("https://www.teamliquid.net/calendar/")
+	crawler.Crawl()
 }
