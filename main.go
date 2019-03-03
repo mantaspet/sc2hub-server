@@ -23,6 +23,7 @@ func main() {
 			log.Fatal("Cannot encode to JSON ", err)
 		}
 		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.WriteHeader(http.StatusOK)
 		_, err = w.Write(eventsJson)
 		if err != nil {
