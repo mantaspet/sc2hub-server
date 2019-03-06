@@ -1,55 +1,30 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
+	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/mantaspet/sc2hub-server/api"
-	"github.com/mantaspet/sc2hub-server/crawler"
 	"log"
 	"net/http"
 )
+
+func eventRouter() *chi.Mux {
+	r := chi.NewRouter()
+	r.Get("/", api.GetEvents)
+	r.Get("/crawl/{year}/{month}", api.CrawlEvents)
+	return r
+}
 
 func main() {
 	api.InitDatabase()
 	defer api.DB.Close()
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		_, err := fmt.Fprintf(w, "sc2hub api\nAvailable endpoints:\nGET /events")
-		if err != nil {
-			log.Fatal("Unable to return response ", err)
-		}
-	})
+	r := chi.NewRouter()
+	r.Use(middleware.Recoverer)
+	r.Use(middleware.Logger)
 
-	http.HandleFunc("/crawl-events", func(w http.ResponseWriter, r *http.Request) {
-		events := crawler.TeamliquidEvents()
-		eventsJson, err := json.Marshal(events)
-		if err != nil {
-			log.Fatal("Cannot encode to JSON ", err)
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.WriteHeader(http.StatusOK)
-		_, err = w.Write(eventsJson)
-		if err != nil {
-			log.Fatal("Unable to return response ", err)
-		}
-	})
+	r.Mount("/events", eventRouter())
 
-	http.HandleFunc("/events", func(w http.ResponseWriter, r *http.Request) {
-		events := api.GetEvents()
-		eventsJson, err := json.Marshal(events)
-		if err != nil {
-			log.Fatal("Cannot encode to JSON ", err)
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.WriteHeader(http.StatusOK)
-		_, err = w.Write(eventsJson)
-		if err != nil {
-			log.Fatal("Unable to return response ", err)
-		}
-	})
-
-	log.Fatal(http.ListenAndServe(":9000", nil))
+	log.Fatal(http.ListenAndServe(":9000", r))
 }

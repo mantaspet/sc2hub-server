@@ -1,11 +1,14 @@
 package api
 
 import (
+	"github.com/go-chi/chi"
+	"github.com/mantaspet/sc2hub-server/crawlers"
 	"github.com/mantaspet/sc2hub-server/models"
 	"log"
+	"net/http"
 )
 
-func GetEvents() []models.Event {
+func GetEvents(w http.ResponseWriter, r *http.Request) {
 	var event models.Event
 	var events []models.Event
 	rows, err := DB.Query("SELECT * FROM events")
@@ -25,5 +28,12 @@ func GetEvents() []models.Event {
 	if err != nil {
 		log.Fatal(err)
 	}
-	return events
+	respondWithJSON(w, http.StatusOK, events)
+}
+
+func CrawlEvents(w http.ResponseWriter, r *http.Request) {
+	year := chi.URLParam(r, "year")
+	month := chi.URLParam(r, "month")
+	events := crawlers.TeamliquidEvents(year, month)
+	respondWithJSON(w, http.StatusOK, events)
 }
