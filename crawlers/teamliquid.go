@@ -69,7 +69,7 @@ func TeamliquidEvents(year string, month string) []models.Event {
 			}
 			datetime := fmt.Sprintf("%v-%v-%v %v", year, month, days[i], times[i])
 
-			events = append(events, models.Event{Title: &titles[i], Stage: &stages[i], StartsAt: &datetime})
+			events = append(events, models.Event{Title: titles[i], Stage: stages[i], StartsAt: datetime})
 		}
 	}
 	return events

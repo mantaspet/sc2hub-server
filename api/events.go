@@ -14,7 +14,7 @@ import (
 func GetEvents(w http.ResponseWriter, r *http.Request) {
 	var event models.Event
 	var events []models.Event
-	rows, err := DB.Query("SELECT * FROM events")
+	rows, err := DB.Query("SELECT id, COALESCE(event_category_id, 0) as event_category_id, title, stage, starts_at, info FROM events")
 	if err != nil {
 		panic(err)
 	}
@@ -43,7 +43,7 @@ func CrawlEvents(w http.ResponseWriter, r *http.Request) {
 	var query strings.Builder
 	query.WriteString("INSERT INTO events (title, stage, starts_at) VALUES ")
 	for _, e := range events {
-		fmt.Fprintf(&query, "(\"%v\", \"%v\", \"%v\"), ", *e.Title, *e.Stage, *e.StartsAt)
+		fmt.Fprintf(&query, "(\"%v\", \"%v\", \"%v\"), ", e.Title, e.Stage, e.StartsAt)
 	}
 	q := query.String()
 	if strings.HasSuffix(q, ", ") {
