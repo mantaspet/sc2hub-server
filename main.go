@@ -12,7 +12,7 @@ import (
 func eventRouter() *chi.Mux {
 	r := chi.NewRouter()
 	r.Get("/", api.GetEvents)
-	r.Get("/crawl/{year}/{month}", api.CrawlEvents)
+	r.Get("/crawl", api.CrawlEvents)
 	return r
 }
 

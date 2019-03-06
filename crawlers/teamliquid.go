@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gocolly/colly"
 	"github.com/mantaspet/sc2hub-server/models"
+	"strconv"
 )
 
 func TeamliquidEvents(year string, month string) []models.Event {
@@ -21,6 +22,7 @@ func TeamliquidEvents(year string, month string) []models.Event {
 		e.ForEach(".ev-block", func(i int, el *colly.HTMLElement) {
 			var event models.Event
 			event.Title = el.ChildText("span[data-event-id]")
+			event.TeamLiquidID, _ = strconv.Atoi(el.ChildAttr("span[data-event-id]", "data-event-id"))
 			event.Stage = el.ChildText(".ev-stage")
 			event.StartsAt = year + "-" + month + "-" + day + " " + el.ChildText(".ev-timer")
 			events = append(events, event)
