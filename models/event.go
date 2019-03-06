@@ -3,12 +3,12 @@ package models
 import "fmt"
 
 type Event struct {
-	ID              int    `json:"id" db:"id"`
-	EventCategoryID int    `json:"event_category_id" db:"event_category_id"`
-	Title           string `json:"title" db:"title"`
-	Stage           string `json:"stage" db:"stage"`
-	StartsAt        string `json:"starts_at" db:"starts_at"`
-	Info            string `json:"info" db:"info"`
+	ID              *int    `json:"id" db:"id"`
+	EventCategoryID *int    `json:"event_category_id" db:"event_category_id"`
+	Title           *string `json:"title" db:"title"`
+	Stage           *string `json:"stage" db:"stage"`
+	StartsAt        *string `json:"starts_at" db:"starts_at"`
+	Info            *string `json:"info" db:"info"`
 }
 
 func (e Event) String() string {

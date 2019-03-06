@@ -1,11 +1,14 @@
 package api
 
 import (
+	"fmt"
 	"github.com/go-chi/chi"
 	"github.com/mantaspet/sc2hub-server/crawlers"
 	"github.com/mantaspet/sc2hub-server/models"
 	"log"
 	"net/http"
+	"strings"
+	"time"
 )
 
 func GetEvents(w http.ResponseWriter, r *http.Request) {
@@ -13,27 +16,48 @@ func GetEvents(w http.ResponseWriter, r *http.Request) {
 	var events []models.Event
 	rows, err := DB.Query("SELECT * FROM events")
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 	defer rows.Close()
 	for rows.Next() {
 		err := rows.Scan(&event.ID, &event.EventCategoryID, &event.Title, &event.Stage, &event.StartsAt, &event.Info)
 		if err != nil {
-			log.Fatal(err)
+			panic(err.Error())
 		}
 		events = append(events, event)
 		//log.Println(event)
 	}
 	err = rows.Err()
 	if err != nil {
-		log.Fatal(err)
+		panic(err.Error())
 	}
 	respondWithJSON(w, http.StatusOK, events)
 }
 
 func CrawlEvents(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	defer fmt.Printf("Successfully crawled teamliquid.net events. Elapsed time: %v\n", time.Since(start))
 	year := chi.URLParam(r, "year")
 	month := chi.URLParam(r, "month")
 	events := crawlers.TeamliquidEvents(year, month)
-	respondWithJSON(w, http.StatusOK, events)
+	var query strings.Builder
+	query.WriteString("INSERT INTO events (title, stage, starts_at) VALUES ")
+	for _, e := range events {
+		fmt.Fprintf(&query, "(\"%v\", \"%v\", \"%v\"), ", *e.Title, *e.Stage, *e.StartsAt)
+	}
+	q := query.String()
+	if strings.HasSuffix(q, ", ") {
+		q = q[:len(q)-2]
+	}
+	log.Println(q)
+	res, err := DB.Exec(q)
+	if err != nil {
+		panic(err.Error())
+	}
+	rowCnt, err := res.RowsAffected()
+	if err != nil {
+		panic(err.Error())
+	}
+	response := "Rows inserted: " + string(rowCnt)
+	respondWithJSON(w, http.StatusOK, response)
 }

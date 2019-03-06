@@ -8,11 +8,9 @@ import (
 	"log"
 	"net/http"
 	"strings"
-	"time"
 )
 
 func TeamliquidEvents(year string, month string) []models.Event {
-	start := time.Now()
 	var events []models.Event
 	url := fmt.Sprintf("https://www.teamliquid.net/calendar/?view=month&year=%v&month=%v&game=1", year, month)
 	resp, err := http.Get(url)
@@ -69,10 +67,10 @@ func TeamliquidEvents(year string, month string) []models.Event {
 			if len(days[i]) < 2 {
 				days[i] = fmt.Sprintf("0%v", days[i])
 			}
-			date := fmt.Sprintf("%v-%v-%v", year, month, days[i])
-			events = append(events, models.Event{Title: titles[i], Stage: stages[i], StartsAt: date + " " + times[i]})
+			datetime := fmt.Sprintf("%v-%v-%v %v", year, month, days[i], times[i])
+
+			events = append(events, models.Event{Title: &titles[i], Stage: &stages[i], StartsAt: &datetime})
 		}
 	}
-	fmt.Printf("Successfully crawled teamliquid.net events. Elapsed time: %v\n", time.Since(start))
 	return events
 }
