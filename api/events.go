@@ -41,6 +41,9 @@ func CrawlEvents(w http.ResponseWriter, r *http.Request) {
 	month := chi.URLParam(r, "month")
 	events := crawlers.TeamliquidEvents(year, month)
 	var query strings.Builder
+	if len(events) == 0 {
+		return
+	}
 	query.WriteString("INSERT INTO events (title, stage, starts_at) VALUES ")
 	for _, e := range events {
 		fmt.Fprintf(&query, "(\"%v\", \"%v\", \"%v\"), ", e.Title, e.Stage, e.StartsAt)

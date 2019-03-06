@@ -12,5 +12,5 @@ type Event struct {
 }
 
 func (e Event) String() string {
-	return fmt.Sprintf("\nid: %d\nevent_category_id: %d\ntitle: %v\nstage: %v\nstarts_at: %v\ninfo: %v\n\n", e.ID, e.EventCategoryID, e.Title, e.Stage, e.StartsAt, e.Info)
+	return fmt.Sprintf("\nid: %d\nevent_category_id: %d\ntitle: %v\nstage: %v\nstarts_at: %v\ninfo: %v\n", e.ID, e.EventCategoryID, e.Title, e.Stage, e.StartsAt, e.Info)
 }
