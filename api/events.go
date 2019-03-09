@@ -31,7 +31,6 @@ func GetEvents(w http.ResponseWriter, r *http.Request) {
 	dayDiff := dateTo.Sub(dateFrom).Hours() / 24
 
 	if int(dayDiff) > allowedDayDiff {
-		fmt.Println("wtf")
 		respondWithJSON(w, http.StatusBadRequest, "Max allowed date range is "+strconv.Itoa(allowedDayDiff)+" days")
 		return
 	}

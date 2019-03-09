@@ -16,6 +16,15 @@ func eventRouter() *chi.Mux {
 	return r
 }
 
+func eventCategoryRouter() *chi.Mux {
+	r := chi.NewRouter()
+	r.Get("/", api.GetEventCategories)
+	r.Post("/", api.CreateEventCategory)
+	r.Put("/{id}", api.UpdateEventCategory)
+	r.Delete("/{id}", api.DeleteEventCategory)
+	return r
+}
+
 func main() {
 	api.InitDatabase()
 	defer api.DB.Close()
@@ -25,6 +34,7 @@ func main() {
 	r.Use(middleware.Logger)
 
 	r.Mount("/events", eventRouter())
+	r.Mount("/event-categories", eventCategoryRouter())
 
 	log.Fatal(http.ListenAndServe(":9000", r))
 }
