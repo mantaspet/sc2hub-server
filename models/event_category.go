@@ -1,11 +1,12 @@
 package models
 
 type EventCategory struct {
-	ID      int
-	Name    string
-	Pattern string
-	InfoURL string
-	Order   int
+	ID       int
+	Name     string
+	Pattern  string
+	InfoURL  string
+	ImageURL string
+	Order    int
 }
 
 func (ec EventCategory) Validate() map[string]string {
