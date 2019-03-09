@@ -12,20 +12,31 @@ import (
 )
 
 func GetEvents(w http.ResponseWriter, r *http.Request) {
-	year := r.URL.Query().Get("year")
-	month := r.URL.Query().Get("month")
+	allowedDayDiff := 90
 	var event models.Event
 	events := []models.Event{}
-	if len(month) != 2 {
-		month = time.Now().UTC().Format("01")
+	dateFromStr := r.URL.Query().Get("date_from")
+	dateToStr := r.URL.Query().Get("date_to")
+
+	dateFrom, err := time.Parse("2006-01-02", dateFromStr)
+	if err != nil {
+		respondWithJSON(w, http.StatusBadRequest, "Wrong date format. Must be yyyy-mm-dd")
+		return
 	}
-	if len(year) != 4 {
-		year = time.Now().UTC().Format("2006")
+	dateTo, err := time.Parse("2006-01-02", dateToStr)
+	if err != nil {
+		respondWithJSON(w, http.StatusBadRequest, "Wrong date format. Must be yyyy-mm-dd")
+		return
 	}
-	dateFromStr := year + month + "01"
-	dateFrom, _ := time.Parse("20060102", dateFromStr)
-	dateTo := dateFrom.AddDate(0, 1, 0)
-	rows, err := DB.Query("SELECT id, COALESCE(event_category_id, 0) as event_category_id, COALESCE(team_liquid_id, 0) as team_liquid_id, title, stage, starts_at, info FROM events WHERE starts_at BETWEEN ? AND ?", dateFrom, dateTo)
+	dayDiff := dateTo.Sub(dateFrom).Hours() / 24
+
+	if int(dayDiff) > allowedDayDiff {
+		fmt.Println("wtf")
+		respondWithJSON(w, http.StatusBadRequest, "Max allowed date range is "+strconv.Itoa(allowedDayDiff)+" days")
+		return
+	}
+
+	rows, err := DB.Query("SELECT id, COALESCE(event_category_id, 0) as event_category_id, COALESCE(team_liquid_id, 0) as team_liquid_id, title, stage, starts_at, info FROM events WHERE starts_at BETWEEN ? AND ?", dateFromStr, dateToStr)
 	if err != nil {
 		panic(err)
 	}
