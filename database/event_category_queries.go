@@ -2,12 +2,11 @@ package database
 
 import (
 	"database/sql"
-	"github.com/mantaspet/sc2hub-server/models"
 )
 
-func SelectEventCategories() ([]models.EventCategory, error) {
-	var ec models.EventCategory
-	var eventCategories []models.EventCategory
+func SelectEventCategories() ([]EventCategory, error) {
+	var ec EventCategory
+	var eventCategories []EventCategory
 	rows, err := db.Query(`
 		SELECT
 			id,
@@ -38,8 +37,8 @@ func SelectEventCategories() ([]models.EventCategory, error) {
 	return eventCategories, nil
 }
 
-func InsertEventCategory(ec models.EventCategory) (models.EventCategory, error) {
-	var res models.EventCategory
+func InsertEventCategory(ec EventCategory) (EventCategory, error) {
+	var res EventCategory
 	qRes, err := db.Exec(`
 		INSERT INTO
 		  	event_categories (name, pattern, info_url, image_url, priority)
@@ -70,8 +69,8 @@ func InsertEventCategory(ec models.EventCategory) (models.EventCategory, error) 
 	return res, nil
 }
 
-func UpdateEventCategory(id string, ec models.EventCategory) (models.EventCategory, error) {
-	var res models.EventCategory
+func UpdateEventCategory(id string, ec EventCategory) (EventCategory, error) {
+	var res EventCategory
 	_, err := db.Exec(`
 		UPDATE
 		  	event_categories

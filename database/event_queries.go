@@ -2,13 +2,12 @@ package database
 
 import (
 	"fmt"
-	"github.com/mantaspet/sc2hub-server/models"
 	"strings"
 )
 
-func SelectEvents(dateFrom string, dateTo string) ([]models.Event, error) {
-	var event models.Event
-	events := []models.Event{}
+func SelectEvents(dateFrom string, dateTo string) ([]Event, error) {
+	var event Event
+	events := []Event{}
 	rows, err := db.Query(`
 		SELECT
 			id,
@@ -39,7 +38,7 @@ func SelectEvents(dateFrom string, dateTo string) ([]models.Event, error) {
 	return events, nil
 }
 
-func InsertEvents(events []models.Event) (int64, error) {
+func InsertEvents(events []Event) (int64, error) {
 	valueStrings := make([]string, 0, len(events))
 	valueArgs := make([]interface{}, 0, len(events)*4)
 	for _, e := range events {

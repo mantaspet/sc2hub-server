@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"github.com/go-chi/chi"
 	"github.com/mantaspet/sc2hub-server/database"
-	"github.com/mantaspet/sc2hub-server/models"
 	"net/http"
 )
 
@@ -20,7 +19,7 @@ func getEventCategories(w http.ResponseWriter, r *http.Request) {
 
 func createEventCategory(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
-	var ec models.EventCategory
+	var ec database.EventCategory
 	err := decoder.Decode(&ec)
 	if err != nil {
 		respondWithJSON(w, http.StatusUnprocessableEntity, err.Error())
@@ -42,7 +41,7 @@ func createEventCategory(w http.ResponseWriter, r *http.Request) {
 func updateEventCategory(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	decoder := json.NewDecoder(r.Body)
-	var ec models.EventCategory
+	var ec database.EventCategory
 	err := decoder.Decode(&ec)
 	if err != nil {
 		respondWithJSON(w, http.StatusUnprocessableEntity, err.Error())
