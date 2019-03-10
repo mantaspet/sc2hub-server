@@ -6,7 +6,7 @@ type EventCategory struct {
 	Pattern  string
 	InfoURL  string
 	ImageURL string
-	Order    int
+	Priority int
 }
 
 func (ec EventCategory) Validate() map[string]string {
@@ -17,11 +17,11 @@ func (ec EventCategory) Validate() map[string]string {
 	if len(ec.Pattern) < 1 {
 		errors["Pattern"] = "Field is required"
 	}
-	if ec.Order == 0 {
-		errors["Order"] = "Field is required"
+	if ec.Priority == 0 {
+		errors["Priority"] = "Field is required"
 	}
-	if ec.Order < 0 {
-		errors["Order"] = "Order must be above zero"
+	if ec.Priority < 0 {
+		errors["Priority"] = "Priority must be above zero"
 	}
 	if len(errors) > 0 {
 		return errors
