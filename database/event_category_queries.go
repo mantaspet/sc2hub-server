@@ -120,3 +120,21 @@ func DeleteEventCategory(id string) error {
 	}
 	return err
 }
+
+func UpdateEventCategoryPriorities(m map[int]int) error {
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+	for key, val := range m {
+		_, err := tx.Exec(`UPDATE event_categories SET priority=? WHERE id=?;`, val, key)
+		if err != nil {
+			return err
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+	return nil
+}

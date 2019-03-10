@@ -20,6 +20,7 @@ func InitRouter() chi.Router {
 		r.Post("/", createEventCategory)
 		r.Put("/{id}", updateEventCategory)
 		r.Delete("/{id}", deleteEventCategory)
+		r.Put("/reorder", reorderEventCategories)
 	})
 
 	return r

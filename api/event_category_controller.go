@@ -76,3 +76,19 @@ func deleteEventCategory(w http.ResponseWriter, r *http.Request) {
 	}
 	respondWithJSON(w, http.StatusOK, "Event category was deleted")
 }
+
+func reorderEventCategories(w http.ResponseWriter, r *http.Request) {
+	var m map[int]int
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&m)
+	if err != nil {
+		respondWithJSON(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	err = database.UpdateEventCategoryPriorities(m)
+	if err != nil {
+		respondWithJSON(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	respondWithJSON(w, http.StatusOK, "Event category priorities were updated")
+}
