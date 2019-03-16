@@ -6,6 +6,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/mantaspet/sc2hub-server/database"
 	"net/http"
+	"strconv"
 )
 
 func getEventCategories(w http.ResponseWriter, r *http.Request) {
@@ -47,6 +48,11 @@ func updateEventCategory(w http.ResponseWriter, r *http.Request) {
 		respondWithJSON(w, http.StatusUnprocessableEntity, err.Error())
 		return
 	}
+	ec.ID, err = strconv.Atoi(id)
+	if err != nil {
+		respondWithJSON(w, http.StatusBadRequest, err.Error())
+		return
+	}
 	validation := ec.Validate()
 	if len(validation) > 0 {
 		respondWithJSON(w, http.StatusUnprocessableEntity, validation)
@@ -77,17 +83,32 @@ func deleteEventCategory(w http.ResponseWriter, r *http.Request) {
 }
 
 func reorderEventCategories(w http.ResponseWriter, r *http.Request) {
-	var m map[int]int
+	type reqBody struct {
+		ID       int
+		Priority int
+	}
+	var b reqBody
 	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&m)
+	err := decoder.Decode(&b)
+	if b.Priority == 0 || b.ID == 0 {
+		respondWithJSON(w, http.StatusBadRequest, "Request body must contain ID and Priority fields")
+		return
+	}
 	if err != nil {
 		respondWithJSON(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	err = database.UpdateEventCategoryPriorities(m)
+	err = database.UpdateEventCategoryPriorities(b.ID, b.Priority)
 	if err != nil {
 		respondWithJSON(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 	respondWithJSON(w, http.StatusOK, "Event category priorities were updated")
+}
+
+func eventCategoryPreflight(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:4200")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.WriteHeader(http.StatusOK)
 }

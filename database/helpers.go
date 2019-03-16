@@ -7,9 +7,13 @@ import (
 	"strings"
 )
 
-func fieldExists(table string, field string, value interface{}) error {
+func fieldExists(table string, field string, value interface{}, id int) error {
 	var res interface{}
 	query := fmt.Sprintf("SELECT NULL FROM %s WHERE %s='%v'", table, field, value)
+	if id > 0 {
+		query += fmt.Sprintf(" AND id<>%v", id)
+	}
+	fmt.Println(query)
 	err := db.QueryRow(query).Scan(&res)
 	if err != nil {
 		if err != sql.ErrNoRows {

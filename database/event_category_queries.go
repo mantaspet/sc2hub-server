@@ -6,7 +6,7 @@ import (
 
 func SelectEventCategories() ([]EventCategory, error) {
 	var ec EventCategory
-	var eventCategories []EventCategory
+	eventCategories := []EventCategory{}
 	rows, err := db.Query(`
 		SELECT
 			id,
@@ -14,6 +14,7 @@ func SelectEventCategories() ([]EventCategory, error) {
 		    pattern,
 		    COALESCE(info_url, '') as info_url,
 		    COALESCE(image_url, '') as image_url,
+		    COALESCE(description, '') as description,
 		    priority
 		FROM
 		    event_categories
@@ -24,7 +25,7 @@ func SelectEventCategories() ([]EventCategory, error) {
 	}
 	defer rows.Close()
 	for rows.Next() {
-		err := rows.Scan(&ec.ID, &ec.Name, &ec.Pattern, &ec.InfoURL, &ec.ImageURL, &ec.Priority)
+		err := rows.Scan(&ec.ID, &ec.Name, &ec.Pattern, &ec.InfoURL, &ec.ImageURL, &ec.Description, &ec.Priority)
 		if err != nil {
 			return nil, err
 		}
@@ -39,11 +40,13 @@ func SelectEventCategories() ([]EventCategory, error) {
 
 func InsertEventCategory(ec EventCategory) (EventCategory, error) {
 	var res EventCategory
+	var maxPriority int
+	err := db.QueryRow(`SELECT MAX(priority) FROM event_categories`).Scan(&maxPriority)
 	qRes, err := db.Exec(`
 		INSERT INTO
-		  	event_categories (name, pattern, info_url, image_url, priority)
+		  	event_categories (name, pattern, info_url, image_url, description, priority)
 		VALUES
-		    (?, ?, ?, ?, ?)`, ec.Name, ec.Pattern, ec.InfoURL, ec.ImageURL, ec.Priority)
+		    (?, ?, ?, ?, ?, ?)`, ec.Name, ec.Pattern, ec.InfoURL, ec.ImageURL, &ec.Description, maxPriority+1)
 	if err != nil {
 		return res, err
 	}
@@ -58,12 +61,13 @@ func InsertEventCategory(ec EventCategory) (EventCategory, error) {
 		    pattern,
 		    COALESCE(info_url, '') as info_url,
 		    COALESCE(image_url, '') as image_url,
+		    COALESCE(description, '') as description,
 		    priority
 		FROM
 		    event_categories
 		WHERE
 		    id=?`, id)
-	if err = row.Scan(&res.ID, &res.Name, &res.Pattern, &res.InfoURL, &res.ImageURL, &res.Priority); err != nil {
+	if err = row.Scan(&res.ID, &res.Name, &res.Pattern, &res.InfoURL, &res.ImageURL, &res.Description, &res.Priority); err != nil {
 		return res, err
 	}
 	return res, nil
@@ -79,9 +83,9 @@ func UpdateEventCategory(id string, ec EventCategory) (EventCategory, error) {
 		    pattern=?,
 		    info_url=?,
 		    image_url=?,
-		    priority=?
+		    description=?
 		WHERE
-		    id=?`, ec.Name, ec.Pattern, ec.InfoURL, ec.ImageURL, ec.Priority, id)
+		    id=?`, ec.Name, ec.Pattern, ec.InfoURL, ec.ImageURL, ec.Description, id)
 	if err != nil {
 		return res, err
 	}
@@ -91,12 +95,14 @@ func UpdateEventCategory(id string, ec EventCategory) (EventCategory, error) {
 		    name,
 		    pattern,
 		    COALESCE(info_url, '') as info_url,
+		    COALESCE(image_url, '') as image_url,
+		    COALESCE(description, '') as description,
 		    priority
 		FROM
 		    event_categories
 		WHERE
 		    id=?`, id)
-	if err = row.Scan(&res.ID, &res.Name, &res.Pattern, &res.InfoURL, &res.Priority); err != nil {
+	if err = row.Scan(&res.ID, &res.Name, &res.Pattern, &res.InfoURL, &res.ImageURL, &res.Description, &res.Priority); err != nil {
 		return res, err
 	}
 	return res, nil
@@ -120,16 +126,34 @@ func DeleteEventCategory(id string) error {
 	return err
 }
 
-func UpdateEventCategoryPriorities(m map[int]int) error {
+func UpdateEventCategoryPriorities(id int, newPrio int) error {
 	tx, err := db.Begin()
 	if err != nil {
 		return err
 	}
-	for key, val := range m {
-		_, err := tx.Exec(`UPDATE event_categories SET priority=? WHERE id=?;`, val, key)
-		if err != nil {
-			return err
+	var oldPrio int
+	_ = tx.QueryRow(`SELECT priority FROM event_categories WHERE id=?`, id).Scan(&oldPrio)
+	if oldPrio == newPrio {
+		return nil
+	}
+	if newPrio > oldPrio {
+		for i := oldPrio + 1; i <= newPrio; i++ {
+			_, err = tx.Exec(`UPDATE event_categories SET priority=? WHERE priority=?`, i-1, i)
+			if err != nil {
+				return err
+			}
 		}
+	} else {
+		for i := oldPrio - 1; i >= newPrio; i-- {
+			_, err = tx.Exec(`UPDATE event_categories SET priority=? WHERE priority=?`, i+1, i)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	_, err = tx.Exec(`UPDATE event_categories SET priority=? WHERE id=?`, newPrio, id)
+	if err != nil {
+		return err
 	}
 	err = tx.Commit()
 	if err != nil {

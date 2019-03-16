@@ -21,6 +21,7 @@ func InitRouter() chi.Router {
 		r.Put("/{id}", updateEventCategory)
 		r.Delete("/{id}", deleteEventCategory)
 		r.Put("/reorder", reorderEventCategories)
+		r.Options("/*", eventCategoryPreflight)
 	})
 
 	return r
