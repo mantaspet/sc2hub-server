@@ -40,22 +40,27 @@ func SelectEvents(dateFrom string, dateTo string) ([]Event, error) {
 
 func InsertEvents(events []Event) (int64, error) {
 	valueStrings := make([]string, 0, len(events))
-	valueArgs := make([]interface{}, 0, len(events)*4)
+	valueArgs := make([]interface{}, 0, len(events)*5)
 	for _, e := range events {
-		valueStrings = append(valueStrings, "(?, ?, ?, ?)")
+		valueStrings = append(valueStrings, "(?, ?, ?, ?, ?)")
 		valueArgs = append(valueArgs, e.Title)
+		if e.EventCategoryID > 0 {
+			valueArgs = append(valueArgs, e.EventCategoryID)
+		} else {
+			valueArgs = append(valueArgs, nil)
+		}
 		valueArgs = append(valueArgs, e.TeamLiquidID)
 		valueArgs = append(valueArgs, e.Stage)
 		valueArgs = append(valueArgs, e.StartsAt)
 	}
 	q := fmt.Sprintf(`
-		INSERT INTO events(title, team_liquid_id, stage, starts_at)
+		INSERT INTO events(title, event_category_id, team_liquid_id, stage, starts_at)
 		VALUES %s 
 		ON DUPLICATE KEY UPDATE
 			title=VALUES(title),
 			stage=VALUES(stage),
 			starts_at=VALUES(starts_at);`, strings.Join(valueStrings, ","))
-
+	fmt.Println(q)
 	res, err := db.Exec(q, valueArgs...)
 	if err != nil {
 		return 0, err
@@ -66,4 +71,40 @@ func InsertEvents(events []Event) (int64, error) {
 	}
 	_, _ = db.Exec(`ALTER TABLE events AUTO_INCREMENT=1`) // to prevent ON DUPLICATE KEY triggers from inflating next ID
 	return rowCnt, nil
+}
+
+func AssignCategories(events []Event) ([]Event, error) {
+	eventsWithCategories := make([]Event, 0, len(events))
+	eventCategories, err := SelectEventCategories()
+	if err != nil {
+		return nil, err
+	}
+	for _, e := range events {
+		for _, ec := range eventCategories {
+			if strings.Contains(strings.ToLower(e.Title), ec.Pattern) {
+				e.EventCategoryID = ec.ID
+				break
+			}
+		}
+		eventsWithCategories = append(eventsWithCategories, e)
+	}
+	return eventsWithCategories, nil
+}
+
+func LoadCategories(events []Event) ([]Event, error) {
+	eventCategories, err := SelectEventCategories()
+	eventsWithCategories := make([]Event, 0, len(events))
+	if err != nil {
+		return nil, err
+	}
+	for _, e := range events {
+		for _, ec := range eventCategories {
+			if e.EventCategoryID == ec.ID {
+				e.EventCategory = ec
+				break
+			}
+		}
+		eventsWithCategories = append(eventsWithCategories, e)
+	}
+	return eventsWithCategories, nil
 }

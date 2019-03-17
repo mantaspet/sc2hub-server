@@ -33,6 +33,12 @@ func getEvents(w http.ResponseWriter, r *http.Request) {
 		respondWithJSON(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	events, err = database.LoadCategories(events)
+	if err != nil {
+		respondWithJSON(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	events, err = database.AssignCategories(events)
 	respondWithJSON(w, http.StatusOK, events)
 }
 
@@ -47,7 +53,16 @@ func crawlEvents(w http.ResponseWriter, r *http.Request) {
 	if len(year) != 4 {
 		year = time.Now().UTC().Format("2006")
 	}
-	events := crawlers.TeamliquidEvents(year, month)
+	events, err := crawlers.TeamliquidEvents(year, month)
+	if err != nil {
+		respondWithJSON(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	events, err = database.AssignCategories(events)
+	if err != nil {
+		respondWithJSON(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 	if len(events) == 0 {
 		respondWithJSON(w, http.StatusOK, "No events found")
 		return
@@ -55,6 +70,7 @@ func crawlEvents(w http.ResponseWriter, r *http.Request) {
 	rowCnt, err := database.InsertEvents(events)
 	if err != nil {
 		respondWithJSON(w, http.StatusInternalServerError, err.Error())
+		return
 	}
 	rowCntStr := strconv.Itoa(int(rowCnt))
 	res := "Rows affected: " + rowCntStr

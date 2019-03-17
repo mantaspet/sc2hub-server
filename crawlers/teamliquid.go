@@ -7,7 +7,7 @@ import (
 	"strconv"
 )
 
-func TeamliquidEvents(year string, month string) []database.Event {
+func TeamliquidEvents(year string, month string) ([]database.Event, error) {
 	var events []database.Event
 	var day string
 	url := fmt.Sprintf("https://www.teamliquid.net/calendar/?view=month&year=%v&month=%v&game=1", year, month)
@@ -34,8 +34,5 @@ func TeamliquidEvents(year string, month string) []database.Event {
 	})
 
 	err := c.Visit(url)
-	if err != nil {
-		panic(err)
-	}
-	return events
+	return events, err
 }
