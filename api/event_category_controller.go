@@ -7,6 +7,7 @@ import (
 	"github.com/mantaspet/sc2hub-server/database"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 func getEventCategories(w http.ResponseWriter, r *http.Request) {
@@ -76,7 +77,11 @@ func deleteEventCategory(w http.ResponseWriter, r *http.Request) {
 		respondWithJSON(w, http.StatusNotFound, "Event category with a specified ID does not exist")
 		return
 	} else if err != nil {
-		respondWithJSON(w, http.StatusInternalServerError, err.Error())
+		if strings.Contains(err.Error(), "foreign key constraint fails") {
+			respondWithJSON(w, http.StatusConflict, err.Error())
+		} else {
+			respondWithJSON(w, http.StatusInternalServerError, err.Error())
+		}
 		return
 	}
 	respondWithJSON(w, http.StatusOK, "Event category was deleted")

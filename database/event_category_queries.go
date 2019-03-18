@@ -109,26 +109,50 @@ func UpdateEventCategory(id string, ec EventCategory) (EventCategory, error) {
 }
 
 func DeleteEventCategory(id string) error {
-	res, err := db.Exec(`
+	var oldPrio int
+	var maxPrio int
+	tx, err := db.Begin()
+	if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+	_ = tx.QueryRow(`SELECT priority FROM event_categories WHERE id=?`, id).Scan(&oldPrio)
+	_ = tx.QueryRow(`SELECT max(priority) as max FROM event_categories`).Scan(&maxPrio)
+	for i := oldPrio + 1; i <= maxPrio; i++ {
+		_, err = tx.Exec(`UPDATE event_categories SET priority=? WHERE priority=?`, i-1, i)
+		if err != nil {
+			_ = tx.Rollback()
+			return err
+		}
+	}
+	res, err := tx.Exec(`
 		DELETE FROM
 			event_categories
 		WHERE
 		    id=?`, id)
 	if err != nil {
+		_ = tx.Rollback()
 		return err
 	}
 	rowCnt, err := res.RowsAffected()
 	if rowCnt == 0 {
+		_ = tx.Rollback()
 		return sql.ErrNoRows
 	} else if err != nil {
+		_ = tx.Rollback()
 		return err
 	}
-	return err
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func UpdateEventCategoryPriorities(id int, newPrio int) error {
 	tx, err := db.Begin()
 	if err != nil {
+		_ = tx.Rollback()
 		return err
 	}
 	var oldPrio int
@@ -140,6 +164,7 @@ func UpdateEventCategoryPriorities(id int, newPrio int) error {
 		for i := oldPrio + 1; i <= newPrio; i++ {
 			_, err = tx.Exec(`UPDATE event_categories SET priority=? WHERE priority=?`, i-1, i)
 			if err != nil {
+				_ = tx.Rollback()
 				return err
 			}
 		}
@@ -147,12 +172,14 @@ func UpdateEventCategoryPriorities(id int, newPrio int) error {
 		for i := oldPrio - 1; i >= newPrio; i-- {
 			_, err = tx.Exec(`UPDATE event_categories SET priority=? WHERE priority=?`, i+1, i)
 			if err != nil {
+				_ = tx.Rollback()
 				return err
 			}
 		}
 	}
 	_, err = tx.Exec(`UPDATE event_categories SET priority=? WHERE id=?`, newPrio, id)
 	if err != nil {
+		_ = tx.Rollback()
 		return err
 	}
 	err = tx.Commit()
