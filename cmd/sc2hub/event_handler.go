@@ -1,15 +1,14 @@
-package api
+package main
 
 import (
 	"fmt"
-	"github.com/mantaspet/sc2hub-server/crawlers"
-	"github.com/mantaspet/sc2hub-server/database"
+	"github.com/mantaspet/sc2hub-server/pkg/crawlers"
 	"net/http"
 	"strconv"
 	"time"
 )
 
-func getEvents(w http.ResponseWriter, r *http.Request) {
+func (app *application) getEvents(w http.ResponseWriter, r *http.Request) {
 	allowedDayDiff := 90
 	dateFromStr := r.URL.Query().Get("date_from")
 	dateToStr := r.URL.Query().Get("date_to")
@@ -28,21 +27,21 @@ func getEvents(w http.ResponseWriter, r *http.Request) {
 		respondWithJSON(w, http.StatusBadRequest, "Max allowed date range is "+strconv.Itoa(allowedDayDiff)+" days")
 		return
 	}
-	events, err := database.SelectEvents(dateFromStr, dateToStr)
+	events, err := app.events.Select(dateFromStr, dateToStr)
 	if err != nil {
 		respondWithJSON(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	events, err = database.LoadCategories(events)
+	events, err = app.eventCategories.LoadCategories(events)
 	if err != nil {
 		respondWithJSON(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	events, err = database.AssignCategories(events)
+	events, err = app.eventCategories.AssignCategories(events)
 	respondWithJSON(w, http.StatusOK, events)
 }
 
-func crawlEvents(w http.ResponseWriter, r *http.Request) {
+func (app *application) crawlEvents(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	defer fmt.Printf("Successfully crawled teamliquid.net events. Elapsed time: %v\n", time.Since(start))
 	year := r.URL.Query().Get("year")
@@ -58,7 +57,7 @@ func crawlEvents(w http.ResponseWriter, r *http.Request) {
 		respondWithJSON(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	events, err = database.AssignCategories(events)
+	events, err = app.eventCategories.AssignCategories(events)
 	if err != nil {
 		respondWithJSON(w, http.StatusInternalServerError, err.Error())
 		return
@@ -67,7 +66,7 @@ func crawlEvents(w http.ResponseWriter, r *http.Request) {
 		respondWithJSON(w, http.StatusOK, "No events found")
 		return
 	}
-	rowCnt, err := database.InsertEvents(events)
+	rowCnt, err := app.events.InsertEvents(events)
 	if err != nil {
 		respondWithJSON(w, http.StatusInternalServerError, err.Error())
 		return

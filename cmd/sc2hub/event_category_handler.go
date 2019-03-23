@@ -1,17 +1,17 @@
-package api
+package main
 
 import (
 	"database/sql"
 	"encoding/json"
 	"github.com/go-chi/chi"
-	"github.com/mantaspet/sc2hub-server/database"
+	"github.com/mantaspet/sc2hub-server/pkg/models"
 	"net/http"
 	"strconv"
 	"strings"
 )
 
-func getEventCategories(w http.ResponseWriter, r *http.Request) {
-	eventCategories, err := database.SelectEventCategories()
+func (app *application) getEventCategories(w http.ResponseWriter, r *http.Request) {
+	eventCategories, err := app.eventCategories.SelectEventCategories()
 	if err != nil {
 		respondWithJSON(w, http.StatusInternalServerError, err.Error())
 		return
@@ -19,9 +19,9 @@ func getEventCategories(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, eventCategories)
 }
 
-func createEventCategory(w http.ResponseWriter, r *http.Request) {
+func (app *application) createEventCategory(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
-	var ec database.EventCategory
+	var ec models.EventCategory
 	err := decoder.Decode(&ec)
 	if err != nil {
 		respondWithJSON(w, http.StatusUnprocessableEntity, err.Error())
@@ -32,7 +32,7 @@ func createEventCategory(w http.ResponseWriter, r *http.Request) {
 		respondWithJSON(w, http.StatusUnprocessableEntity, validation)
 		return
 	}
-	res, err := database.InsertEventCategory(ec)
+	res, err := app.eventCategories.InsertEventCategory(ec)
 	if err != nil {
 		respondWithJSON(w, http.StatusInternalServerError, err.Error())
 		return
@@ -40,10 +40,10 @@ func createEventCategory(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, res)
 }
 
-func updateEventCategory(w http.ResponseWriter, r *http.Request) {
+func (app *application) updateEventCategory(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	decoder := json.NewDecoder(r.Body)
-	var ec database.EventCategory
+	var ec models.EventCategory
 	err := decoder.Decode(&ec)
 	if err != nil {
 		respondWithJSON(w, http.StatusUnprocessableEntity, err.Error())
@@ -59,7 +59,7 @@ func updateEventCategory(w http.ResponseWriter, r *http.Request) {
 		respondWithJSON(w, http.StatusUnprocessableEntity, validation)
 		return
 	}
-	res, err := database.UpdateEventCategory(id, ec)
+	res, err := app.eventCategories.UpdateEventCategory(id, ec)
 	if err == sql.ErrNoRows {
 		respondWithJSON(w, http.StatusNotFound, "Event category with a specified ID does not exist")
 		return
@@ -70,9 +70,9 @@ func updateEventCategory(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, res)
 }
 
-func deleteEventCategory(w http.ResponseWriter, r *http.Request) {
+func (app *application) deleteEventCategory(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	err := database.DeleteEventCategory(id)
+	err := app.eventCategories.DeleteEventCategory(id)
 	if err == sql.ErrNoRows {
 		respondWithJSON(w, http.StatusNotFound, "Event category with a specified ID does not exist")
 		return
@@ -87,7 +87,7 @@ func deleteEventCategory(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, "Event category was deleted")
 }
 
-func reorderEventCategories(w http.ResponseWriter, r *http.Request) {
+func (app *application) reorderEventCategories(w http.ResponseWriter, r *http.Request) {
 	type reqBody struct {
 		ID       int
 		Priority int
@@ -103,7 +103,7 @@ func reorderEventCategories(w http.ResponseWriter, r *http.Request) {
 		respondWithJSON(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	err = database.UpdateEventCategoryPriorities(b.ID, b.Priority)
+	err = app.eventCategories.UpdateEventCategoryPriorities(b.ID, b.Priority)
 	if err != nil {
 		respondWithJSON(w, http.StatusInternalServerError, err.Error())
 		return
