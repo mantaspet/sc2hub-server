@@ -11,11 +11,8 @@ type EventModel struct {
 	DB *sql.DB
 }
 
-func (m *EventModel) Select(dateFrom string, dateTo string) ([]models.Event, error) {
-	var event models.Event
-	events := []models.Event{}
-	rows, err := m.DB.Query(`
-		SELECT
+func (m *EventModel) SelectInDateRange(dateFrom string, dateTo string) ([]*models.Event, error) {
+	stmt := `SELECT
 			id,
 			COALESCE(event_category_id, 0) as event_category_id,
 			COALESCE(team_liquid_id, 0) as team_liquid_id,
@@ -25,26 +22,32 @@ func (m *EventModel) Select(dateFrom string, dateTo string) ([]models.Event, err
 			info
 	  	FROM events
 	  	WHERE starts_at BETWEEN ? AND ?
-		ORDER BY starts_at`, dateFrom, dateTo)
+		ORDER BY starts_at`
+
+	rows, err := m.DB.Query(stmt, dateFrom, dateTo)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
+
+	events := []*models.Event{}
 	for rows.Next() {
-		err := rows.Scan(&event.ID, &event.EventCategoryID, &event.TeamLiquidID, &event.Title, &event.Stage, &event.StartsAt, &event.Info)
+		e := &models.Event{}
+		err := rows.Scan(&e.ID, &e.EventCategoryID, &e.TeamLiquidID, &e.Title, &e.Stage, &e.StartsAt, &e.Info)
 		if err != nil {
 			return nil, err
 		}
-		events = append(events, event)
+		events = append(events, e)
 	}
 	err = rows.Err()
 	if err != nil {
 		return nil, err
 	}
+
 	return events, nil
 }
 
-func (m *EventModel) InsertEvents(events []models.Event) (int64, error) {
+func (m *EventModel) Insert(events []*models.Event) (int64, error) {
 	valueStrings := make([]string, 0, len(events))
 	valueArgs := make([]interface{}, 0, len(events)*5)
 	for _, e := range events {
@@ -59,14 +62,16 @@ func (m *EventModel) InsertEvents(events []models.Event) (int64, error) {
 		valueArgs = append(valueArgs, e.Stage)
 		valueArgs = append(valueArgs, e.StartsAt)
 	}
-	q := fmt.Sprintf(`
+
+	stmt := fmt.Sprintf(`
 		INSERT INTO events(title, event_category_id, team_liquid_id, stage, starts_at)
 		VALUES %s 
 		ON DUPLICATE KEY UPDATE
 			title=VALUES(title),
 			stage=VALUES(stage),
 			starts_at=VALUES(starts_at);`, strings.Join(valueStrings, ","))
-	res, err := m.DB.Exec(q, valueArgs...)
+
+	res, err := m.DB.Exec(stmt, valueArgs...)
 	if err != nil {
 		return 0, err
 	}
@@ -74,6 +79,8 @@ func (m *EventModel) InsertEvents(events []models.Event) (int64, error) {
 	if err != nil {
 		return rowCnt, err
 	}
+
 	_, _ = m.DB.Exec(`ALTER TABLE events AUTO_INCREMENT=1`) // to prevent ON DUPLICATE KEY triggers from inflating next ID
+
 	return rowCnt, nil
 }

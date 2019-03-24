@@ -4,21 +4,30 @@ import (
 	"database/sql"
 	"flag"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/mantaspet/sc2hub-server/pkg/models"
 	"github.com/mantaspet/sc2hub-server/pkg/models/mysql"
 	"log"
 	"net/http"
 	"os"
 )
 
-// TODO inject in handler functions like this:
-// func (app *application) home(w http.ResponseWriter, r *http.Request) {
-// ...
-// app.errorLog.Println(err.Error())
 type application struct {
-	errorLog        *log.Logger
-	infoLog         *log.Logger
-	events          *mysql.EventModel
-	eventCategories *mysql.EventCategoryModel
+	db       *sql.DB // TODO find a better solution. This is used only in pkg validators SQLUnique function
+	errorLog *log.Logger
+	infoLog  *log.Logger
+	events   interface {
+		SelectInDateRange(dateFrom string, dateTo string) ([]*models.Event, error)
+		Insert(events []*models.Event) (int64, error)
+	}
+	eventCategories interface {
+		SelectAll() ([]*models.EventCategory, error)
+		Insert(ec models.EventCategory) (*models.EventCategory, error)
+		Update(id string, ec models.EventCategory) (*models.EventCategory, error)
+		Delete(id string) error
+		UpdatePriorities(id int, newPrio int) error
+		AssignToEvents(events []*models.Event) ([]*models.Event, error)
+		LoadOnEvents(events []*models.Event) ([]*models.Event, error)
+	}
 }
 
 func main() {
@@ -30,14 +39,14 @@ func main() {
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Llongfile)
 
 	var err error
-	db, err := initDB(*dsn)
+	db, err := openDB(*dsn + "?parseTime=true")
 	if err != nil {
 		errorLog.Fatal(err)
 	}
-
 	defer db.Close()
 
 	app := &application{
+		db:              db,
 		errorLog:        errorLog,
 		infoLog:         infoLog,
 		events:          &mysql.EventModel{DB: db},
@@ -47,21 +56,25 @@ func main() {
 	srv := &http.Server{
 		Addr:     *addr,
 		ErrorLog: errorLog,
-		Handler:  app.initRouter(),
+		Handler:  app.router(),
 	}
 
 	infoLog.Printf("Starting server on %s", *addr)
 	err = srv.ListenAndServe()
-	errorLog.Fatal(err)
+	if err != nil {
+		errorLog.Fatal(err)
+	}
 }
 
-func initDB(dsn string) (*sql.DB, error) {
+func openDB(dsn string) (*sql.DB, error) {
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
 		return nil, err
 	}
+
 	if err = db.Ping(); err != nil {
 		return nil, err
 	}
+
 	return db, nil
 }
