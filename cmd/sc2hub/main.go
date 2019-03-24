@@ -6,6 +6,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/mantaspet/sc2hub-server/pkg/models"
 	"github.com/mantaspet/sc2hub-server/pkg/models/mysql"
+	"google.golang.org/appengine"
 	"log"
 	"net/http"
 	"os"
@@ -64,6 +65,7 @@ func main() {
 	if err != nil {
 		errorLog.Fatal(err)
 	}
+	appengine.Main()
 }
 
 func openDB(dsn string) (*sql.DB, error) {
