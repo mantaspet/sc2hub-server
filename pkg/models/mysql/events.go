@@ -47,7 +47,7 @@ func (m *EventModel) SelectInDateRange(dateFrom string, dateTo string) ([]*model
 	return events, nil
 }
 
-func (m *EventModel) Insert(events []*models.Event) (int64, error) {
+func (m *EventModel) InsertMany(events []models.Event) (int64, error) {
 	valueStrings := make([]string, 0, len(events))
 	valueArgs := make([]interface{}, 0, len(events)*5)
 	for _, e := range events {
@@ -72,6 +72,7 @@ func (m *EventModel) Insert(events []*models.Event) (int64, error) {
 			starts_at=VALUES(starts_at);`, strings.Join(valueStrings, ","))
 
 	res, err := m.DB.Exec(stmt, valueArgs...)
+	_, _ = m.DB.Exec(`ALTER TABLE events AUTO_INCREMENT=1`) // to prevent ON DUPLICATE KEY triggers from inflating next ID
 	if err != nil {
 		return 0, err
 	}
@@ -79,8 +80,6 @@ func (m *EventModel) Insert(events []*models.Event) (int64, error) {
 	if err != nil {
 		return rowCnt, err
 	}
-
-	_, _ = m.DB.Exec(`ALTER TABLE events AUTO_INCREMENT=1`) // to prevent ON DUPLICATE KEY triggers from inflating next ID
 
 	return rowCnt, nil
 }

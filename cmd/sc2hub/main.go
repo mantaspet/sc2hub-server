@@ -18,7 +18,7 @@ type application struct {
 	infoLog  *log.Logger
 	events   interface {
 		SelectInDateRange(dateFrom string, dateTo string) ([]*models.Event, error)
-		Insert(events []*models.Event) (int64, error)
+		InsertMany(events []models.Event) (int64, error)
 	}
 	eventCategories interface {
 		SelectAll() ([]*models.EventCategory, error)
@@ -28,6 +28,10 @@ type application struct {
 		UpdatePriorities(id int, newPrio int) error
 		AssignToEvents(events []*models.Event) ([]*models.Event, error)
 		LoadOnEvents(events []*models.Event) ([]*models.Event, error)
+	}
+	players interface {
+		SelectAllPlayers() ([]*models.Player, error)
+		InsertMany(players []models.Player) (int64, error)
 	}
 }
 
@@ -52,6 +56,7 @@ func main() {
 		infoLog:         infoLog,
 		events:          &mysql.EventModel{DB: db},
 		eventCategories: &mysql.EventCategoryModel{DB: db},
+		players:         &mysql.PlayerModel{DB: db},
 	}
 
 	srv := &http.Server{

@@ -48,5 +48,5 @@ func (app *application) json(w http.ResponseWriter, payload interface{}) {
 
 func (app *application) logTrace(err error) {
 	trace := fmt.Sprintf("%s\n%s", err.Error(), debug.Stack())
-	_ = app.errorLog.Output(2, trace)
+	_ = app.errorLog.Output(3, trace)
 }

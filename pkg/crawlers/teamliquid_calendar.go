@@ -7,8 +7,8 @@ import (
 	"strconv"
 )
 
-func TeamliquidEvents(year string, month string) ([]*models.Event, error) {
-	var events []*models.Event
+func TeamliquidEvents(year string, month string) ([]models.Event, error) {
+	var events []models.Event
 	var day string
 	url := fmt.Sprintf("https://www.teamliquid.net/calendar/?view=month&year=%v&month=%v&game=1", year, month)
 	c := colly.NewCollector()
@@ -20,7 +20,7 @@ func TeamliquidEvents(year string, month string) ([]*models.Event, error) {
 		}
 
 		e.ForEach(".ev-block", func(i int, el *colly.HTMLElement) {
-			var event *models.Event
+			var event models.Event
 			event.Title = el.ChildText("span[data-event-id]")
 			event.TeamLiquidID, _ = strconv.Atoi(el.ChildAttr("span[data-event-id]", "data-event-id"))
 			event.Stage = el.ChildText(".ev-stage")

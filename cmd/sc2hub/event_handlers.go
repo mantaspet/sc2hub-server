@@ -64,7 +64,7 @@ func (app *application) crawlEvents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	events, err = app.eventCategories.AssignToEvents(events)
+	//events, err = app.eventCategories.AssignToEvents(events)
 	if err != nil {
 		app.serverError(w, err)
 		return
@@ -74,7 +74,7 @@ func (app *application) crawlEvents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rowCnt, err := app.events.Insert(events)
+	rowCnt, err := app.events.InsertMany(events)
 	if err != nil {
 		app.serverError(w, err)
 		return

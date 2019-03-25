@@ -24,5 +24,10 @@ func (app *application) router() chi.Router {
 		r.Options("/*", eventCategoryPreflight)
 	})
 
+	r.Route("/players", func(r chi.Router) {
+		r.Get("/", app.getAllPlayers)
+		r.Get("/crawl", app.crawlPlayers)
+	})
+
 	return r
 }
