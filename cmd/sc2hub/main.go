@@ -1,11 +1,15 @@
 package main
 
 import (
+	"context"
+	"crypto/tls"
 	"database/sql"
 	"flag"
+	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/mantaspet/sc2hub-server/pkg/models"
 	"github.com/mantaspet/sc2hub-server/pkg/models/mysql"
+	"golang.org/x/crypto/acme/autocert"
 	"log"
 	"net/http"
 	"os"
@@ -34,16 +38,40 @@ type application struct {
 	}
 }
 
-func main() {
-	addr := flag.String("addr", ":9000", "HTTP network address")
-	dsn := flag.String("dsn", "a:a@/sc2hub", "MySQL data source name")
+var (
+	flgProduction = false
+	flgAddr       = ":9000"
+	flgDsn        = ""
+)
+
+func parseFlags() {
+	flag.BoolVar(&flgProduction, "prod", false, "if true, we start HTTPS server")
+	flag.StringVar(&flgAddr, "addr", ":9000", "HTTPS network address")
+	flag.StringVar(&flgDsn, "dsn", "root:root@/sc2hub", "MySQL data source name")
 	flag.Parse()
+}
+
+func openDB(dsn string) (*sql.DB, error) {
+	db, err := sql.Open("mysql", dsn)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = db.Ping(); err != nil {
+		return nil, err
+	}
+
+	return db, nil
+}
+
+func main() {
+	parseFlags()
 
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Llongfile)
 
 	var err error
-	db, err := openDB(*dsn + "?parseTime=true")
+	db, err := openDB(flgDsn + "?parseTime=true")
 	if err != nil {
 		errorLog.Fatal(err)
 	}
@@ -59,27 +87,38 @@ func main() {
 	}
 
 	srv := &http.Server{
-		Addr:     *addr,
+		Addr:     flgAddr,
 		ErrorLog: errorLog,
 		Handler:  app.router(),
 	}
 
-	infoLog.Printf("Starting server on %s", *addr)
-	err = srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem")
-	if err != nil {
-		errorLog.Fatal(err)
-	}
-}
+	if flgProduction {
+		hostPolicy := func(ctx context.Context, host string) error {
+			allowedHost := "bca43.l.dedikuoti.lt"
+			if host == allowedHost {
+				return nil
+			}
+			return fmt.Errorf("acme/autocert: only %s host is allowed", allowedHost)
+		}
 
-func openDB(dsn string) (*sql.DB, error) {
-	db, err := sql.Open("mysql", dsn)
-	if err != nil {
-		return nil, err
-	}
+		dataDir := "."
+		m := &autocert.Manager{
+			Prompt:     autocert.AcceptTOS,
+			HostPolicy: hostPolicy,
+			Cache:      autocert.DirCache(dataDir),
+		}
 
-	if err = db.Ping(); err != nil {
-		return nil, err
+		srv.TLSConfig = &tls.Config{GetCertificate: m.GetCertificate}
+		infoLog.Printf("Starting server on %s", flgAddr)
+		err = srv.ListenAndServeTLS("", "")
+		if err != nil {
+			errorLog.Fatal(err)
+		}
+	} else {
+		infoLog.Printf("Starting server on %s", flgAddr)
+		err = srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem")
+		if err != nil {
+			errorLog.Fatal(err)
+		}
 	}
-
-	return db, nil
 }
