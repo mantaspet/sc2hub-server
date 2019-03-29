@@ -1,11 +1,9 @@
 package main
 
 import (
-	"context"
 	"crypto/tls"
 	"database/sql"
 	"flag"
-	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/mantaspet/sc2hub-server/pkg/models"
 	"github.com/mantaspet/sc2hub-server/pkg/models/mysql"
@@ -93,23 +91,14 @@ func main() {
 	}
 
 	if flgProduction {
-		hostPolicy := func(ctx context.Context, host string) error {
-			allowedHost := "bca43.l.dedikuoti.lt"
-			if host == allowedHost {
-				return nil
-			}
-			return fmt.Errorf("acme/autocert: only %s host is allowed", allowedHost)
+		certManager := autocert.Manager{
+			Prompt: autocert.AcceptTOS,
+			Cache:  autocert.DirCache("certs"),
 		}
 
-		dataDir := "."
-		m := &autocert.Manager{
-			Prompt:     autocert.AcceptTOS,
-			HostPolicy: hostPolicy,
-			Cache:      autocert.DirCache(dataDir),
-		}
-
-		srv.TLSConfig = &tls.Config{GetCertificate: m.GetCertificate}
+		srv.TLSConfig = &tls.Config{GetCertificate: certManager.GetCertificate}
 		infoLog.Printf("Starting server on %s", flgAddr)
+		go http.ListenAndServe(":80", certManager.HTTPHandler(nil))
 		err = srv.ListenAndServeTLS("", "")
 		if err != nil {
 			errorLog.Fatal(err)
