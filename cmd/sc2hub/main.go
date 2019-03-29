@@ -38,13 +38,13 @@ type application struct {
 
 var (
 	flgProduction = false
-	flgAddr       = ":9000"
+	flgAddr       = ":443"
 	flgDsn        = ""
 )
 
 func parseFlags() {
 	flag.BoolVar(&flgProduction, "prod", false, "if true, we start HTTPS server")
-	flag.StringVar(&flgAddr, "addr", ":9000", "HTTPS network address")
+	flag.StringVar(&flgAddr, "addr", ":443", "HTTPS network address")
 	flag.StringVar(&flgDsn, "dsn", "root:root@/sc2hub", "MySQL data source name")
 	flag.Parse()
 }
@@ -105,7 +105,7 @@ func main() {
 		}
 	} else {
 		infoLog.Printf("Starting server on %s", flgAddr)
-		err = srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem")
+		err = srv.ListenAndServe()
 		if err != nil {
 			errorLog.Fatal(err)
 		}

@@ -126,10 +126,8 @@ func (m *EventCategoryModel) Update(id string, ec models.EventCategory) (*models
 	if err != nil {
 		return nil, err
 	}
-	rowCnt, err := updateRes.RowsAffected()
-	if rowCnt == 0 {
-		return nil, models.ErrNotFound
-	} else if err != nil {
+	_, err = updateRes.RowsAffected()
+	if err != nil {
 		return nil, err
 	}
 

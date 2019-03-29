@@ -21,7 +21,7 @@ func (app *application) router() chi.Router {
 		r.Put("/{id}", app.updateEventCategory)
 		r.Delete("/{id}", app.deleteEventCategory)
 		r.Put("/reorder", app.reorderEventCategories)
-		r.Options("/*", eventCategoryPreflight)
+		r.Options("/*", app.genericPreflightHandler)
 	})
 
 	r.Route("/players", func(r chi.Router) {

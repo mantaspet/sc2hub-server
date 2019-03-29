@@ -116,10 +116,3 @@ func (app *application) reorderEventCategories(w http.ResponseWriter, r *http.Re
 
 	app.json(w, "Event category priorities were updated")
 }
-
-func eventCategoryPreflight(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:4200")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-	w.WriteHeader(http.StatusOK)
-}
