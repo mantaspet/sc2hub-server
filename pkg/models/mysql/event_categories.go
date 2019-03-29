@@ -69,7 +69,7 @@ func (m *EventCategoryModel) Insert(ec models.EventCategory) (*models.EventCateg
 		WHERE
 		    id=?`
 
-	maxPrioStmt := `SELECT MAX(priority) FROM event_categories`
+	maxPrioStmt := `SELECT COALESCE(MAX(priority), 1) FROM event_categories`
 
 	var maxPriority int
 	err := m.DB.QueryRow(maxPrioStmt).Scan(&maxPriority)
