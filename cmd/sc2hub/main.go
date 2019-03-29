@@ -6,7 +6,6 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/mantaspet/sc2hub-server/pkg/models"
 	"github.com/mantaspet/sc2hub-server/pkg/models/mysql"
-	"google.golang.org/appengine"
 	"log"
 	"net/http"
 	"os"
@@ -37,7 +36,7 @@ type application struct {
 
 func main() {
 	addr := flag.String("addr", ":9000", "HTTP network address")
-	dsn := flag.String("dsn", "root:root@/sc2hub", "MySQL data source name")
+	dsn := flag.String("dsn", "a:a@/sc2hub", "MySQL data source name")
 	flag.Parse()
 
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
@@ -66,11 +65,10 @@ func main() {
 	}
 
 	infoLog.Printf("Starting server on %s", *addr)
-	err = srv.ListenAndServe()
+	err = srv.ListenAndServeTLS("../../tls/cert.pem", "../../tls/key.pem")
 	if err != nil {
 		errorLog.Fatal(err)
 	}
-	appengine.Main()
 }
 
 func openDB(dsn string) (*sql.DB, error) {
