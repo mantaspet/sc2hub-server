@@ -15,6 +15,7 @@ import (
 
 type application struct {
 	db       *sql.DB // TODO find a better solution. This is used only in pkg validators SQLUnique function
+	origin   string
 	errorLog *log.Logger
 	infoLog  *log.Logger
 	events   interface {
@@ -40,12 +41,14 @@ var (
 	flgProduction = false
 	flgAddr       = ":443"
 	flgDsn        = ""
+	flgOrigin     = ""
 )
 
 func parseFlags() {
 	flag.BoolVar(&flgProduction, "prod", false, "if true, we start HTTPS server")
 	flag.StringVar(&flgAddr, "addr", ":443", "HTTPS network address")
 	flag.StringVar(&flgDsn, "dsn", "root:root@/sc2hub", "MySQL data source name")
+	flag.StringVar(&flgOrigin, "origin", "http://localhost:4200", "client origin")
 	flag.Parse()
 }
 
@@ -77,6 +80,7 @@ func main() {
 
 	app := &application{
 		db:              db,
+		origin:          flgOrigin,
 		errorLog:        errorLog,
 		infoLog:         infoLog,
 		events:          &mysql.EventModel{DB: db},
