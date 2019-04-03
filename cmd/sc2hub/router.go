@@ -17,10 +17,12 @@ func (app *application) router() chi.Router {
 
 	r.Route("/event-categories", func(r chi.Router) {
 		r.Get("/", app.getEventCategories)
+		r.Get("/{id}/videos", app.getVideosByCategory)
+		r.Get("/{id}/articles", app.getArticlesByCategory)
 		r.Post("/", app.createEventCategory)
 		r.Put("/{id}", app.updateEventCategory)
-		r.Delete("/{id}", app.deleteEventCategory)
 		r.Put("/reorder", app.reorderEventCategories)
+		r.Delete("/{id}", app.deleteEventCategory)
 		r.Options("/*", app.genericPreflightHandler)
 	})
 

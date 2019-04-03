@@ -35,6 +35,12 @@ type application struct {
 		SelectAllPlayers() ([]*models.Player, error)
 		InsertMany(players []models.Player) (int64, error)
 	}
+	videos interface {
+		SelectByCategory(categoryID int) ([]models.Video, error)
+	}
+	articles interface {
+		SelectByCategory(categoryID int) ([]models.Article, error)
+	}
 }
 
 var (
@@ -86,6 +92,8 @@ func main() {
 		events:          &mysql.EventModel{DB: db},
 		eventCategories: &mysql.EventCategoryModel{DB: db},
 		players:         &mysql.PlayerModel{DB: db},
+		articles:        &mysql.ArticleModel{DB: db},
+		videos:          &mysql.VideoModel{DB: db},
 	}
 
 	srv := &http.Server{
