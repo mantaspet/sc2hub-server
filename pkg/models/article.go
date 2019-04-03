@@ -9,4 +9,5 @@ type Article struct {
 	Author          string
 	PublishedAt     string
 	Excerpt         string
+	URL             string
 }
