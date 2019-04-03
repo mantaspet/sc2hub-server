@@ -24,6 +24,7 @@ type application struct {
 	}
 	eventCategories interface {
 		SelectAll() ([]*models.EventCategory, error)
+		SelectOne(id string) (*models.EventCategory, error)
 		Insert(ec models.EventCategory) (*models.EventCategory, error)
 		Update(id string, ec models.EventCategory) (*models.EventCategory, error)
 		Delete(id string) error
@@ -36,10 +37,10 @@ type application struct {
 		InsertMany(players []models.Player) (int64, error)
 	}
 	videos interface {
-		SelectByCategory(categoryID int) ([]models.Video, error)
+		SelectByCategory(categoryID string) ([]models.Video, error)
 	}
 	articles interface {
-		SelectByCategory(categoryID int) ([]models.Article, error)
+		SelectByCategory(categoryID string) ([]models.Article, error)
 	}
 }
 

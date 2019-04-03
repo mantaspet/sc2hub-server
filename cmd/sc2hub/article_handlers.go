@@ -7,8 +7,8 @@ import (
 )
 
 func (app *application) getArticlesByCategory(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(chi.URLParam(r, "id"))
-	if err != nil {
+	id := chi.URLParam(r, "id")
+	if _, err := strconv.Atoi(id); err != nil {
 		app.clientError(w, http.StatusBadRequest, err)
 		return
 	}
