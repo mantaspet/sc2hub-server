@@ -17,6 +17,7 @@ func (app *application) router() chi.Router {
 
 	r.Route("/event-categories", func(r chi.Router) {
 		r.Get("/", app.getEventCategories)
+		r.Get("/{id}", app.getEventCategory)
 		r.Get("/{id}/videos", app.getVideosByCategory)
 		r.Get("/{id}/articles", app.getArticlesByCategory)
 		r.Post("/", app.createEventCategory)

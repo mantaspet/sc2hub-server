@@ -19,6 +19,25 @@ func (app *application) getEventCategories(w http.ResponseWriter, r *http.Reques
 	app.json(w, res)
 }
 
+func (app *application) getEventCategory(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	if _, err := strconv.Atoi(id); err != nil {
+		app.clientError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	res, err := app.eventCategories.SelectOne(id)
+	if err == models.ErrNotFound {
+		app.clientError(w, http.StatusNotFound, errors.New("event category with a specified ID does not exist"))
+		return
+	} else if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	app.json(w, res)
+}
+
 func (app *application) createEventCategory(w http.ResponseWriter, r *http.Request) {
 	var ec models.EventCategory
 	err := json.NewDecoder(r.Body).Decode(&ec)

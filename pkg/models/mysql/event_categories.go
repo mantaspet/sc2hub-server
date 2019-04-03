@@ -48,6 +48,24 @@ func (m *EventCategoryModel) SelectAll() ([]*models.EventCategory, error) {
 	return eventCategories, nil
 }
 
+func (m *EventCategoryModel) SelectOne(id string) (*models.EventCategory, error) {
+	stmt := `
+		SELECT id, name, pattern, info_url, image_url, description, priority
+		FROM event_categories
+		WHERE id=?`
+
+	ec := &models.EventCategory{}
+	err := m.DB.QueryRow(stmt, id).Scan(&ec.ID, &ec.Name, &ec.Pattern, &ec.InfoURL, &ec.ImageURL, &ec.Description, &ec.Priority)
+	if err == sql.ErrNoRows {
+		return nil, models.ErrNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return ec, nil
+}
+
 func (m *EventCategoryModel) Insert(ec models.EventCategory) (*models.EventCategory, error) {
 	insertStmt := `
 		INSERT INTO
