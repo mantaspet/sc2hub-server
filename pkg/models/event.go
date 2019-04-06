@@ -20,13 +20,13 @@ type Event struct {
 func (e *Event) MarshalJSON() ([]byte, error) {
 	if e.EventCategoryID == 0 {
 		return json.Marshal(&struct {
-			ID              int         `json:"id"`
-			EventCategoryID interface{} `json:"event_category_id"`
-			EventCategory   interface{} `json:"event_category"`
-			Title           string      `json:"title"`
-			Stage           string      `json:"stage"`
-			StartsAt        string      `json:"starts_at"`
-			Info            string      `json:"info"`
+			ID              int
+			EventCategoryID interface{}
+			EventCategory   interface{}
+			Title           string
+			Stage           string
+			StartsAt        string
+			Info            string
 		}{
 			ID:              e.ID,
 			EventCategoryID: nil,
@@ -38,13 +38,13 @@ func (e *Event) MarshalJSON() ([]byte, error) {
 		})
 	} else {
 		return json.Marshal(&struct {
-			ID              int           `json:"id"`
-			EventCategoryID int           `json:"event_category_id"`
-			EventCategory   EventCategory `json:"event_category"`
-			Title           string        `json:"title"`
-			Stage           string        `json:"stage"`
-			StartsAt        string        `json:"starts_at"`
-			Info            string        `json:"info"`
+			ID              int
+			EventCategoryID int
+			EventCategory   EventCategory
+			Title           string
+			Stage           string
+			StartsAt        string
+			Info            string
 		}{
 			ID:              e.ID,
 			EventCategoryID: e.EventCategoryID,
