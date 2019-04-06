@@ -258,8 +258,8 @@ func (m *EventCategoryModel) UpdatePriorities(id int, newPrio int) error {
 	return err
 }
 
-func (m *EventCategoryModel) AssignToEvents(events []*models.Event) ([]*models.Event, error) {
-	eventsWithCategories := make([]*models.Event, 0, len(events))
+func (m *EventCategoryModel) AssignToEvents(events []models.Event) ([]models.Event, error) {
+	eventsWithCategories := make([]models.Event, 0, len(events))
 	eventCategories, err := m.SelectAll()
 	if err != nil {
 		return nil, err

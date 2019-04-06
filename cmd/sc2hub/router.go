@@ -12,6 +12,9 @@ func (app *application) router() chi.Router {
 
 	r.Route("/events", func(r chi.Router) {
 		r.Get("/", app.getEvents)
+		r.Get("/{id}", app.getEvent)
+		r.Get("/{id}/videos", app.getVideosByCategory)     // TODO replace once video module is implemented
+		r.Get("/{id}/articles", app.getArticlesByCategory) // TODO replace once article module is implemented
 		r.Get("/crawl", app.crawlEvents)
 	})
 

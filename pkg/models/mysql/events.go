@@ -15,7 +15,6 @@ func (m *EventModel) SelectInDateRange(dateFrom string, dateTo string) ([]*model
 	stmt := `SELECT
 			id,
 			COALESCE(event_category_id, 0) as event_category_id,
-			COALESCE(team_liquid_id, 0) as team_liquid_id,
 			title,
 			stage,
 			starts_at,
@@ -33,7 +32,7 @@ func (m *EventModel) SelectInDateRange(dateFrom string, dateTo string) ([]*model
 	events := []*models.Event{}
 	for rows.Next() {
 		e := &models.Event{}
-		err := rows.Scan(&e.ID, &e.EventCategoryID, &e.TeamLiquidID, &e.Title, &e.Stage, &e.StartsAt, &e.Info)
+		err := rows.Scan(&e.ID, &e.EventCategoryID, &e.Title, &e.Stage, &e.StartsAt, &e.Info)
 		if err != nil {
 			return nil, err
 		}
@@ -45,6 +44,28 @@ func (m *EventModel) SelectInDateRange(dateFrom string, dateTo string) ([]*model
 	}
 
 	return events, nil
+}
+
+func (m *EventModel) SelectOne(id string) (*models.Event, error) {
+	stmt := `
+		SELECT events.id, COALESCE(events.event_category_id, 0) as event_category_id, events.title, events.stage, events.starts_at, events.info,
+		       event_categories.id, event_categories.name, event_categories.pattern, event_categories.info_url, event_categories.image_url, event_categories.description, event_categories.priority
+		FROM events
+		INNER JOIN event_categories
+		ON events.event_category_id = event_categories.id
+		WHERE events.id=?`
+
+	e := &models.Event{}
+	err := m.DB.QueryRow(stmt, id).Scan(&e.ID, &e.EventCategoryID, &e.Title, &e.Stage, &e.StartsAt, &e.Info,
+		&e.EventCategory.ID, &e.EventCategory.Name, &e.EventCategory.Pattern, &e.EventCategory.InfoURL, &e.EventCategory.ImageURL, &e.EventCategory.Description, &e.EventCategory.Priority)
+	if err == sql.ErrNoRows {
+		return nil, models.ErrNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return e, nil
 }
 
 func (m *EventModel) InsertMany(events []models.Event) (int64, error) {
@@ -69,7 +90,8 @@ func (m *EventModel) InsertMany(events []models.Event) (int64, error) {
 		ON DUPLICATE KEY UPDATE
 			title=VALUES(title),
 			stage=VALUES(stage),
-			starts_at=VALUES(starts_at);`, strings.Join(valueStrings, ","))
+			starts_at=VALUES(starts_at),
+			event_category_id=VALUES(event_category_id);`, strings.Join(valueStrings, ","))
 
 	res, err := m.DB.Exec(stmt, valueArgs...)
 	_, _ = m.DB.Exec(`ALTER TABLE events AUTO_INCREMENT=1`) // to prevent ON DUPLICATE KEY triggers from inflating next ID

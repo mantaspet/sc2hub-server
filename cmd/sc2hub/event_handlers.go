@@ -3,7 +3,9 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/go-chi/chi"
 	"github.com/mantaspet/sc2hub-server/pkg/crawlers"
+	"github.com/mantaspet/sc2hub-server/pkg/models"
 	"net/http"
 	"strconv"
 	"time"
@@ -46,6 +48,25 @@ func (app *application) getEvents(w http.ResponseWriter, r *http.Request) {
 	app.json(w, events)
 }
 
+func (app *application) getEvent(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	if _, err := strconv.Atoi(id); err != nil {
+		app.clientError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	res, err := app.events.SelectOne(id)
+	if err == models.ErrNotFound {
+		app.clientError(w, http.StatusNotFound, errors.New("event with a specified ID does not exist"))
+		return
+	} else if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	app.json(w, res)
+}
+
 func (app *application) crawlEvents(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	defer fmt.Printf("Successfully crawled teamliquid.net events. Elapsed time: %v\n", time.Since(start))
@@ -64,7 +85,7 @@ func (app *application) crawlEvents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//events, err = app.eventCategories.AssignToEvents(events)
+	events, err = app.eventCategories.AssignToEvents(events)
 	if err != nil {
 		app.serverError(w, err)
 		return

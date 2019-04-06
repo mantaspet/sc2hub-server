@@ -20,6 +20,7 @@ type application struct {
 	infoLog  *log.Logger
 	events   interface {
 		SelectInDateRange(dateFrom string, dateTo string) ([]*models.Event, error)
+		SelectOne(id string) (*models.Event, error)
 		InsertMany(events []models.Event) (int64, error)
 	}
 	eventCategories interface {
@@ -29,7 +30,7 @@ type application struct {
 		Update(id string, ec models.EventCategory) (*models.EventCategory, error)
 		Delete(id string) error
 		UpdatePriorities(id int, newPrio int) error
-		AssignToEvents(events []*models.Event) ([]*models.Event, error)
+		AssignToEvents(events []models.Event) ([]models.Event, error)
 		LoadOnEvents(events []*models.Event) ([]*models.Event, error)
 	}
 	players interface {
