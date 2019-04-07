@@ -21,3 +21,29 @@ func (app *application) getVideosByCategory(w http.ResponseWriter, r *http.Reque
 
 	app.json(w, res)
 }
+
+func (app *application) getVideosFromTwitch(w http.ResponseWriter, r *http.Request) {
+	tcs, err := app.twitchChannels.SelectAll()
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	twitchToken, err := getTwitchAccessToken()
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	var videos []TwitchVideo
+	for _, tc := range tcs {
+		vids, err := getTwitchVideos(tc, twitchToken)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+		videos = append(videos, vids...)
+	}
+
+	app.json(w, videos)
+}

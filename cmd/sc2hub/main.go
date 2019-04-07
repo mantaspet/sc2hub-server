@@ -43,6 +43,9 @@ type application struct {
 	articles interface {
 		SelectByCategory(categoryID string) ([]models.Article, error)
 	}
+	twitchChannels interface {
+		SelectAll() ([]*models.TwitchChannel, error)
+	}
 }
 
 var (
@@ -96,6 +99,7 @@ func main() {
 		players:         &mysql.PlayerModel{DB: db},
 		articles:        &mysql.ArticleModel{DB: db},
 		videos:          &mysql.VideoModel{DB: db},
+		twitchChannels:  &mysql.TwitchChannelModel{DB: db},
 	}
 
 	srv := &http.Server{

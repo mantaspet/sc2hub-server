@@ -35,5 +35,9 @@ func (app *application) router() chi.Router {
 		r.Get("/crawl", app.crawlPlayers)
 	})
 
+	r.Route("/videos", func(r chi.Router) {
+		r.Get("/from-twitch", app.getVideosFromTwitch)
+	})
+
 	return r
 }
