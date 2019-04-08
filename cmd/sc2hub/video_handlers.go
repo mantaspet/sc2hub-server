@@ -2,8 +2,10 @@ package main
 
 import (
 	"github.com/go-chi/chi"
+	"github.com/mantaspet/sc2hub-server/pkg/models"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 func (app *application) getVideosByCategory(w http.ResponseWriter, r *http.Request) {
@@ -35,15 +37,42 @@ func (app *application) getVideosFromTwitch(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	var videos []TwitchVideo
+	var videosToInsert []*models.Video
 	for _, tc := range tcs {
-		vids, err := getTwitchVideos(tc, twitchToken)
+		videos, err := getTwitchVideos(tc, twitchToken)
 		if err != nil {
 			app.serverError(w, err)
 			return
 		}
-		videos = append(videos, vids...)
+
+		for _, v := range videos {
+			createdAt, err := time.Parse("2006-01-02T15:04:05Z", v.CreatedAt)
+			if err != nil {
+				createdAt = time.Now()
+			}
+			videoID, err := strconv.Atoi(v.ID)
+			if err != nil {
+				continue
+			}
+			videoToInsert := &models.Video{
+				EventCategoryID: tc.EventCategoryID,
+				TwitchID:        videoID,
+				ChannelID:       tc.ID,
+				Title:           v.Title,
+				Duration:        v.Duration,
+				CreatedAt:       createdAt,
+			}
+			videosToInsert = append(videosToInsert, videoToInsert)
+		}
 	}
 
-	app.json(w, videos)
+	rowCnt, err := app.videos.InsertOrUpdateMany(videosToInsert)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	rowCntStr := strconv.Itoa(int(rowCnt))
+	res := "Rows affected: " + rowCntStr
+
+	app.json(w, res)
 }
