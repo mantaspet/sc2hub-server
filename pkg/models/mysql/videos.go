@@ -6,25 +6,45 @@ import (
 	"github.com/mantaspet/sc2hub-server/pkg/models"
 	"strconv"
 	"strings"
-	"time"
 )
 
 type VideoModel struct {
 	DB *sql.DB
 }
 
-func (m *VideoModel) SelectByCategory(categoryID string) ([]models.Video, error) {
+func (m *VideoModel) SelectByCategory(categoryID string) ([]*models.Video, error) {
 	id, _ := strconv.Atoi(categoryID)
-	videos := []models.Video{
-		models.Video{
-			1, 1, id, 1, 1, "Dark vs Classic GSL Code S Season 1 Ro4", "1h20min30s", time.Now(),
-		},
-		models.Video{
-			2, 2, id, 1, 1, "Maru vs Dear GSL Code S Season 1 Ro8", "1h20min30s", time.Now(),
-		},
-		models.Video{
-			3, 3, id, 1, 1, "Stats vs Serral PvZ - Grand Final - 2018 WCS Global Finals - StarCraft II", "1h20min30s", time.Now(),
-		},
+	stmt := `SELECT
+			id,
+			COALESCE(event_id, 0) as event_id,
+			COALESCE(event_category_id, 0) as event_category_id,
+			COALESCE(channel_id, 0) as channel_id,
+			COALESCE(twitch_id, 0) as twitch_id,
+			title,
+			duration,
+			created_at
+	  	FROM videos
+	  	WHERE event_category_id=?
+		ORDER BY created_at`
+
+	rows, err := m.DB.Query(stmt, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	videos := []*models.Video{}
+	for rows.Next() {
+		v := &models.Video{}
+		err := rows.Scan(&v.ID, &v.EventID, &v.EventCategoryID, &v.ChannelID, &v.TwitchID, &v.Title, &v.Duration, &v.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		videos = append(videos, v)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
 	}
 
 	return videos, nil
