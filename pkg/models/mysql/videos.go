@@ -25,7 +25,7 @@ func (m *VideoModel) SelectByCategory(categoryID string) ([]*models.Video, error
 			created_at
 	  	FROM videos
 	  	WHERE event_category_id=?
-		ORDER BY created_at`
+		ORDER BY created_at DESC`
 
 	rows, err := m.DB.Query(stmt, id)
 	if err != nil {
