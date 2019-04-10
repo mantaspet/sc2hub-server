@@ -2,11 +2,11 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/mantaspet/sc2hub-server/pkg/models"
 	"net/http"
 	"strconv"
-	"time"
 )
 
 type TwitchVideo struct {
@@ -26,10 +26,21 @@ type TwitchVideo struct {
 	Duration     string `json:"duration"`
 }
 
-func getTwitchAccessToken() (string, error) {
+type TwitchChannel struct {
+	ID              string `json:"id"`
+	Login           string `json:"login"`
+	DisplayName     string `json:"display_name"`
+	Type            string `json:"type"`
+	BroadcasterType string `json:"broadcaster_type"`
+	Description     string `json:"description"`
+	ProfileImageURL string `json:"profile_image_url"`
+	OfflineImageURL string `json:"offline_image_url"`
+	ViewCount       int    `json:"view_count"`
+}
+
+func (app *application) getTwitchAccessToken() (string, error) {
 	authURL := "https://id.twitch.tv/oauth2/token?client_secret=7stuc2sc1z5crnrcdtiw9x95cfyqp0&client_id=hmw2ygtkoc9si4001jxq2xmrmc8g99&grant_type=client_credentials"
-	myClient := &http.Client{Timeout: 10 * time.Second}
-	res, err := myClient.Post(authURL, "application/json", nil)
+	res, err := app.httpClient.Post(authURL, "application/json", nil)
 	if err != nil {
 		return "", err
 	}
@@ -44,13 +55,12 @@ func getTwitchAccessToken() (string, error) {
 	return fmt.Sprintf("%v", appCredentials["access_token"]), nil
 }
 
-func getTwitchVideos(channel *models.TwitchChannel, token string) ([]TwitchVideo, error) {
+func (app *application) getTwitchVideos(channel *models.TwitchChannel, token string) ([]TwitchVideo, error) {
 	url := "https://api.twitch.tv/helix/videos?user_id=" + strconv.Itoa(channel.TwitchUserID)
-	myClient := &http.Client{Timeout: 10 * time.Second}
 
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Set("Authorization", "Bearer "+token)
-	res, err := myClient.Do(req)
+	res, err := app.httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -68,4 +78,34 @@ func getTwitchVideos(channel *models.TwitchChannel, token string) ([]TwitchVideo
 	}
 
 	return data.Data, nil
+}
+
+func (app *application) getChannelDataByLogin(login string) (models.TwitchChannel, error) {
+	var tc models.TwitchChannel
+	url := "https://api.twitch.tv/helix/users?login=" + login
+	req, _ := http.NewRequest("GET", url, nil)
+	req.Header.Set("Client-ID", "hmw2ygtkoc9si4001jxq2xmrmc8g99")
+	res, err := app.httpClient.Do(req)
+	if err != nil {
+		return tc, err
+	}
+
+	type Response struct {
+		Data []TwitchChannel
+	}
+	var data Response
+	err = json.NewDecoder(res.Body).Decode(&data)
+	if len(data.Data) == 0 {
+		return tc, errors.New("channel does not exist")
+	}
+
+	id, _ := strconv.Atoi(data.Data[0].ID)
+	tc = models.TwitchChannel{
+		Login:           data.Data[0].Login,
+		DisplayName:     data.Data[0].DisplayName,
+		TwitchUserID:    id,
+		ProfileImageURL: data.Data[0].ProfileImageURL,
+	}
+
+	return tc, nil
 }

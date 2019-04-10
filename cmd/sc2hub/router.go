@@ -24,6 +24,7 @@ func (app *application) router() chi.Router {
 		r.Get("/{id}/videos", app.getVideosByCategory)
 		r.Get("/{id}/articles", app.getArticlesByCategory)
 		r.Get("/{id}/channels", app.getChannelsByCategory)
+		r.Post("/{id}/channels", app.addChannelToCategory)
 		r.Post("/", app.createEventCategory)
 		r.Put("/{id}", app.updateEventCategory)
 		r.Put("/reorder", app.reorderEventCategories)

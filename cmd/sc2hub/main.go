@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 )
 
 var (
@@ -53,8 +54,11 @@ func main() {
 	}
 	defer db.Close()
 
+	httpClient := &http.Client{Timeout: 10 * time.Second}
+
 	app := &application{
 		db:              db,
+		httpClient:      httpClient,
 		origin:          flgOrigin,
 		errorLog:        errorLog,
 		infoLog:         infoLog,

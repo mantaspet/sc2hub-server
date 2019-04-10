@@ -32,7 +32,7 @@ func (app *application) getVideosFromTwitch(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	twitchToken, err := getTwitchAccessToken()
+	twitchToken, err := app.getTwitchAccessToken()
 	if err != nil {
 		app.serverError(w, err)
 		return
@@ -40,7 +40,7 @@ func (app *application) getVideosFromTwitch(w http.ResponseWriter, r *http.Reque
 
 	var videosToInsert []*models.Video
 	for _, tc := range tcs {
-		videos, err := getTwitchVideos(tc, twitchToken)
+		videos, err := app.getTwitchVideos(tc, twitchToken)
 		if err != nil {
 			app.serverError(w, err)
 			return

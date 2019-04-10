@@ -4,14 +4,16 @@ import (
 	"database/sql"
 	"github.com/mantaspet/sc2hub-server/pkg/models"
 	"log"
+	"net/http"
 )
 
 type application struct {
-	db       *sql.DB // TODO find a better solution. This is used only in pkg validators SQLUnique function
-	origin   string
-	errorLog *log.Logger
-	infoLog  *log.Logger
-	events   interface {
+	httpClient *http.Client
+	db         *sql.DB // TODO find a better solution. This is used only in pkg validators SQLUnique function
+	origin     string
+	errorLog   *log.Logger
+	infoLog    *log.Logger
+	events     interface {
 		SelectInDateRange(dateFrom string, dateTo string) ([]*models.Event, error)
 		SelectOne(id string) (*models.Event, error)
 		InsertMany(events []models.Event) (int64, error)
@@ -40,5 +42,6 @@ type application struct {
 	twitchChannels interface {
 		SelectAll() ([]*models.TwitchChannel, error)
 		SelectByCategory(categoryID int) ([]*models.TwitchChannel, error)
+		Insert(tc models.TwitchChannel) (*models.TwitchChannel, error)
 	}
 }

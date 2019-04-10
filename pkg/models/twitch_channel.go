@@ -4,5 +4,7 @@ type TwitchChannel struct {
 	ID              int
 	EventCategoryID int
 	TwitchUserID    int
-	Name            string
+	Login           string
+	DisplayName     string
+	ProfileImageURL string
 }

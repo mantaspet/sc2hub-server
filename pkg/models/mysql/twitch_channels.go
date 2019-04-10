@@ -11,7 +11,7 @@ type TwitchChannelModel struct {
 
 func (m *TwitchChannelModel) SelectAll() ([]*models.TwitchChannel, error) {
 	stmt := `
-		SELECT id, event_category_id, twitch_user_id, name
+		SELECT id, event_category_id, twitch_user_id, login, display_name, profile_image_url
 		FROM twitch_channels`
 
 	rows, err := m.DB.Query(stmt)
@@ -23,7 +23,7 @@ func (m *TwitchChannelModel) SelectAll() ([]*models.TwitchChannel, error) {
 	tcs := []*models.TwitchChannel{}
 	for rows.Next() {
 		tc := &models.TwitchChannel{}
-		err := rows.Scan(&tc.ID, &tc.EventCategoryID, &tc.TwitchUserID, &tc.Name)
+		err := rows.Scan(&tc.ID, &tc.EventCategoryID, &tc.TwitchUserID, &tc.Login, &tc.DisplayName, &tc.ProfileImageURL)
 		if err != nil {
 			return nil, err
 		}
@@ -39,7 +39,7 @@ func (m *TwitchChannelModel) SelectAll() ([]*models.TwitchChannel, error) {
 
 func (m *TwitchChannelModel) SelectByCategory(categoryID int) ([]*models.TwitchChannel, error) {
 	stmt := `
-		SELECT id, event_category_id, twitch_user_id, name
+		SELECT id, event_category_id, twitch_user_id, login, display_name, profile_image_url
 		FROM twitch_channels
 		WHERE event_category_id=?`
 
@@ -52,7 +52,7 @@ func (m *TwitchChannelModel) SelectByCategory(categoryID int) ([]*models.TwitchC
 	tcs := []*models.TwitchChannel{}
 	for rows.Next() {
 		tc := &models.TwitchChannel{}
-		err := rows.Scan(&tc.ID, &tc.EventCategoryID, &tc.TwitchUserID, &tc.Name)
+		err := rows.Scan(&tc.ID, &tc.EventCategoryID, &tc.TwitchUserID, &tc.Login, &tc.DisplayName, &tc.ProfileImageURL)
 		if err != nil {
 			return nil, err
 		}
@@ -64,4 +64,34 @@ func (m *TwitchChannelModel) SelectByCategory(categoryID int) ([]*models.TwitchC
 	}
 
 	return tcs, nil
+}
+
+func (m *TwitchChannelModel) Insert(tc models.TwitchChannel) (*models.TwitchChannel, error) {
+	insertStmt := `
+		INSERT INTO
+		  	twitch_channels (event_category_id, twitch_user_id, login, display_name, profile_image_url)
+		VALUES
+		    (?, ?, ?, ?, ?)`
+
+	selectStmt := `
+		SELECT id, event_category_id, twitch_user_id, login, display_name, profile_image_url
+		FROM twitch_channels
+		WHERE id=?`
+
+	insertRes, err := m.DB.Exec(insertStmt, tc.EventCategoryID, tc.TwitchUserID, tc.Login, tc.DisplayName, tc.ProfileImageURL)
+	if err != nil {
+		return nil, err
+	}
+	id, err := insertRes.LastInsertId()
+	if err != nil {
+		return nil, err
+	}
+
+	res := &models.TwitchChannel{}
+	err = m.DB.QueryRow(selectStmt, id).Scan(&res.ID, &res.EventCategoryID, &res.TwitchUserID, &res.Login, &res.DisplayName, &res.ProfileImageURL)
+	if err != nil {
+		return res, err
+	}
+
+	return res, nil
 }
