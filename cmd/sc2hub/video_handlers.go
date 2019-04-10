@@ -9,8 +9,9 @@ import (
 )
 
 func (app *application) getVideosByCategory(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
-	if _, err := strconv.Atoi(id); err != nil {
+	idParam := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
 		app.clientError(w, http.StatusBadRequest, err)
 		return
 	}

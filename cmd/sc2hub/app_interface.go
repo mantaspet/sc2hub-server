@@ -31,13 +31,14 @@ type application struct {
 		InsertMany(players []models.Player) (int64, error)
 	}
 	videos interface {
-		SelectByCategory(categoryID string) ([]*models.Video, error)
+		SelectByCategory(categoryID int) ([]*models.Video, error)
 		InsertOrUpdateMany(videos []*models.Video) (int64, error)
 	}
 	articles interface {
-		SelectByCategory(categoryID string) ([]models.Article, error)
+		SelectByCategory(categoryID int) ([]models.Article, error)
 	}
 	twitchChannels interface {
 		SelectAll() ([]*models.TwitchChannel, error)
+		SelectByCategory(categoryID int) ([]*models.TwitchChannel, error)
 	}
 }

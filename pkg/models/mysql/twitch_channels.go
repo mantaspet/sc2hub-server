@@ -36,3 +36,32 @@ func (m *TwitchChannelModel) SelectAll() ([]*models.TwitchChannel, error) {
 
 	return tcs, nil
 }
+
+func (m *TwitchChannelModel) SelectByCategory(categoryID int) ([]*models.TwitchChannel, error) {
+	stmt := `
+		SELECT id, event_category_id, twitch_user_id, name
+		FROM twitch_channels
+		WHERE event_category_id=?`
+
+	rows, err := m.DB.Query(stmt, categoryID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	tcs := []*models.TwitchChannel{}
+	for rows.Next() {
+		tc := &models.TwitchChannel{}
+		err := rows.Scan(&tc.ID, &tc.EventCategoryID, &tc.TwitchUserID, &tc.Name)
+		if err != nil {
+			return nil, err
+		}
+		tcs = append(tcs, tc)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	return tcs, nil
+}

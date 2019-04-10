@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-func (app *application) getArticlesByCategory(w http.ResponseWriter, r *http.Request) {
+func (app *application) getChannelsByCategory(w http.ResponseWriter, r *http.Request) {
 	idParam := chi.URLParam(r, "id")
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
@@ -14,7 +14,7 @@ func (app *application) getArticlesByCategory(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	res, err := app.articles.SelectByCategory(id)
+	res, err := app.twitchChannels.SelectByCategory(id)
 	if err != nil {
 		app.serverError(w, err)
 		return
