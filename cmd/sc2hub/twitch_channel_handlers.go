@@ -2,7 +2,9 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/go-chi/chi"
+	"github.com/mantaspet/sc2hub-server/pkg/models"
 	"net/http"
 	"strconv"
 	"strings"
@@ -79,4 +81,27 @@ func (app *application) addChannelToCategory(w http.ResponseWriter, r *http.Requ
 	}
 
 	app.json(w, res)
+}
+
+func (app *application) deleteChannel(w http.ResponseWriter, r *http.Request) {
+	idParam := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest, err)
+	}
+
+	err = app.twitchChannels.Delete(id)
+	if err == models.ErrNotFound {
+		app.clientError(w, http.StatusNotFound, errors.New("twitch channel with a specified ID does not exist"))
+		return
+	} else if err != nil {
+		if strings.Contains(err.Error(), "foreign key constraint fails") {
+			app.clientError(w, http.StatusConflict, err)
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
+
+	app.json(w, "channel was deleted")
 }

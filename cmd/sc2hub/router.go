@@ -41,5 +41,10 @@ func (app *application) router() chi.Router {
 		r.Get("/from-twitch", app.getVideosFromTwitch)
 	})
 
+	r.Route("/channels", func(r chi.Router) {
+		r.Delete("/{id}", app.deleteChannel)
+		r.Options("/*", app.genericPreflightHandler)
+	})
+
 	return r
 }

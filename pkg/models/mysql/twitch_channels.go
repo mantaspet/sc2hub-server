@@ -95,3 +95,21 @@ func (m *TwitchChannelModel) Insert(tc models.TwitchChannel) (*models.TwitchChan
 
 	return res, nil
 }
+
+func (m *TwitchChannelModel) Delete(id int) error {
+	stmt := `DELETE FROM twitch_channels WHERE id=?`
+
+	res, err := m.DB.Exec(stmt, id)
+	if err != nil {
+		return err
+	}
+
+	rowCnt, err := res.RowsAffected()
+	if rowCnt == 0 {
+		return models.ErrNotFound
+	} else if err != nil {
+		return err
+	}
+
+	return err
+}

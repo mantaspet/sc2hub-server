@@ -43,5 +43,6 @@ type application struct {
 		SelectAll() ([]*models.TwitchChannel, error)
 		SelectByCategory(categoryID int) ([]*models.TwitchChannel, error)
 		Insert(tc models.TwitchChannel) (*models.TwitchChannel, error)
+		Delete(id int) error
 	}
 }
