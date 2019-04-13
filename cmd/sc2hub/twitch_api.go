@@ -38,31 +38,40 @@ type TwitchChannel struct {
 	ViewCount       int    `json:"view_count"`
 }
 
-func (app *application) getTwitchAccessToken() (string, error) {
+func (app *application) getTwitchAccessToken() error {
 	authURL := "https://id.twitch.tv/oauth2/token?client_secret=7stuc2sc1z5crnrcdtiw9x95cfyqp0&client_id=hmw2ygtkoc9si4001jxq2xmrmc8g99&grant_type=client_credentials"
 	res, err := app.httpClient.Post(authURL, "application/json", nil)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	defer res.Body.Close()
 	appCredentials := map[string]interface{}{}
 	err = json.NewDecoder(res.Body).Decode(&appCredentials)
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	return fmt.Sprintf("%v", appCredentials["access_token"]), nil
+	app.twitchAccessToken = fmt.Sprintf("%v", appCredentials["access_token"])
+
+	return nil
 }
 
-func (app *application) getTwitchVideos(channel *models.TwitchChannel, token string) ([]TwitchVideo, error) {
+func (app *application) getTwitchVideos(channel *models.TwitchChannel) ([]TwitchVideo, error) {
 	url := "https://api.twitch.tv/helix/videos?user_id=" + strconv.Itoa(channel.TwitchUserID)
 
 	req, _ := http.NewRequest("GET", url, nil)
-	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Authorization", "Bearer "+app.twitchAccessToken)
 	res, err := app.httpClient.Do(req)
 	if err != nil {
 		return nil, err
+	}
+
+	if res.StatusCode == http.StatusUnauthorized {
+		res, err = app.reauthenticateAndRepeatTwitchRequest(req)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	type Response struct {
@@ -108,4 +117,17 @@ func (app *application) getChannelDataByLogin(login string) (models.TwitchChanne
 	}
 
 	return tc, nil
+}
+
+func (app *application) reauthenticateAndRepeatTwitchRequest(req *http.Request) (*http.Response, error) {
+	err := app.getTwitchAccessToken()
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+app.twitchAccessToken)
+	res, err := app.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
 }

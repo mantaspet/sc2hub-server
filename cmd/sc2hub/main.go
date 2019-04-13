@@ -70,6 +70,12 @@ func main() {
 		twitchChannels:  &mysql.TwitchChannelModel{DB: db},
 	}
 
+	err = app.getTwitchAccessToken()
+	if err != nil {
+		app.errorLog.Println(err.Error())
+		return
+	}
+
 	srv := &http.Server{
 		Addr:     flgAddr,
 		ErrorLog: errorLog,
