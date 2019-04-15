@@ -46,5 +46,9 @@ func (app *application) router() chi.Router {
 		r.Options("/*", app.genericPreflightHandler)
 	})
 
+	r.Route("/twitch", func(r chi.Router) {
+		r.Get("/app-access-token", app.getTwitchAppAccessToken)
+	})
+
 	return r
 }

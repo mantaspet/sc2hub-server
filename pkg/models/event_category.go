@@ -33,6 +33,7 @@ func (ec *EventCategory) MarshalJSON() ([]byte, error) {
 		Description: ec.Description,
 	})
 }
+
 func (ec EventCategory) Validate(db *sql.DB) map[string]string {
 	errors := make(map[string]string)
 	validators.SetError(errors, "Name",

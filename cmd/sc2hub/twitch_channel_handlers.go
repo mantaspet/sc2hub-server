@@ -105,3 +105,7 @@ func (app *application) deleteChannel(w http.ResponseWriter, r *http.Request) {
 
 	app.json(w, "channel was deleted")
 }
+
+func (app *application) getTwitchAppAccessToken(w http.ResponseWriter, r *http.Request) {
+	app.json(w, app.twitchAccessToken)
+}
