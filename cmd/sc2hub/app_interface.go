@@ -34,7 +34,7 @@ type application struct {
 		InsertMany(players []models.Player) (int64, error)
 	}
 	videos interface {
-		SelectByCategory(categoryID int) ([]*models.Video, error)
+		SelectByCategory(categoryID int, query string) ([]*models.Video, error)
 		InsertOrUpdateMany(videos []*models.Video) (int64, error)
 	}
 	articles interface {

@@ -10,13 +10,18 @@ import (
 
 func (app *application) getVideosByCategory(w http.ResponseWriter, r *http.Request) {
 	idParam := chi.URLParam(r, "id")
+	var query string
+	if r.URL.Query()["query"] != nil {
+		query = r.URL.Query()["query"][0]
+	}
+
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	res, err := app.videos.SelectByCategory(id)
+	res, err := app.videos.SelectByCategory(id, query)
 	if err != nil {
 		app.serverError(w, err)
 		return

@@ -11,7 +11,7 @@ type VideoModel struct {
 	DB *sql.DB
 }
 
-func (m *VideoModel) SelectByCategory(categoryID int) ([]*models.Video, error) {
+func (m *VideoModel) SelectByCategory(categoryID int, query string) ([]*models.Video, error) {
 	stmt := `SELECT
 			id,
 			COALESCE(event_id, 0) as event_id,
@@ -22,10 +22,10 @@ func (m *VideoModel) SelectByCategory(categoryID int) ([]*models.Video, error) {
 			duration,
 			created_at
 	  	FROM videos
-	  	WHERE event_category_id=?
+	  	WHERE event_category_id=? AND title LIKE ?
 		ORDER BY created_at DESC`
 
-	rows, err := m.DB.Query(stmt, categoryID)
+	rows, err := m.DB.Query(stmt, categoryID, "%"+query+"%")
 	if err != nil {
 		return nil, err
 	}
