@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/mantaspet/sc2hub-server/pkg/models"
 	"net/http"
-	"strconv"
 )
 
 type TwitchVideo struct {
@@ -29,7 +28,7 @@ type TwitchVideo struct {
 type TwitchChannel struct {
 	ID              string `json:"id"`
 	Login           string `json:"login"`
-	DisplayName     string `json:"display_name"`
+	Title           string `json:"display_name"`
 	Type            string `json:"type"`
 	BroadcasterType string `json:"broadcaster_type"`
 	Description     string `json:"description"`
@@ -57,8 +56,8 @@ func (app *application) getTwitchAccessToken() error {
 	return nil
 }
 
-func (app *application) getTwitchVideos(channel *models.TwitchChannel) ([]TwitchVideo, error) {
-	url := "https://api.twitch.tv/helix/videos?user_id=" + strconv.Itoa(channel.TwitchUserID)
+func (app *application) getTwitchVideos(channel *models.Channel) ([]TwitchVideo, error) {
+	url := "https://api.twitch.tv/helix/videos?user_id=" + channel.ID
 
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Set("Authorization", "Bearer "+app.twitchAccessToken)
@@ -89,34 +88,34 @@ func (app *application) getTwitchVideos(channel *models.TwitchChannel) ([]Twitch
 	return data.Data, nil
 }
 
-func (app *application) getChannelDataByLogin(login string) (models.TwitchChannel, error) {
-	var tc models.TwitchChannel
+func (app *application) getChannelDataByLogin(login string) (models.Channel, error) {
+	var channel models.Channel
 	url := "https://api.twitch.tv/helix/users?login=" + login
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Set("Client-ID", "hmw2ygtkoc9si4001jxq2xmrmc8g99")
 	res, err := app.httpClient.Do(req)
 	if err != nil {
-		return tc, err
+		return channel, err
 	}
 
-	type Response struct {
+	type ResponseBody struct {
 		Data []TwitchChannel
 	}
-	var data Response
-	err = json.NewDecoder(res.Body).Decode(&data)
-	if len(data.Data) == 0 {
-		return tc, errors.New("channel does not exist")
+	var resBody ResponseBody
+	err = json.NewDecoder(res.Body).Decode(&resBody)
+	if len(resBody.Data) == 0 {
+		return channel, errors.New("channel does not exist")
 	}
 
-	id, _ := strconv.Atoi(data.Data[0].ID)
-	tc = models.TwitchChannel{
-		Login:           data.Data[0].Login,
-		DisplayName:     data.Data[0].DisplayName,
-		TwitchUserID:    id,
-		ProfileImageURL: data.Data[0].ProfileImageURL,
+	channel = models.Channel{
+		ID:              resBody.Data[0].ID,
+		PlatformID:      1,
+		Login:           resBody.Data[0].Login,
+		Title:           resBody.Data[0].Title,
+		ProfileImageURL: resBody.Data[0].ProfileImageURL,
 	}
 
-	return tc, nil
+	return channel, nil
 }
 
 func (app *application) reauthenticateAndRepeatTwitchRequest(req *http.Request) (*http.Response, error) {

@@ -6,11 +6,11 @@ import (
 )
 
 type Video struct {
-	ID              int
+	ID              string
 	EventID         int
 	EventCategoryID int
-	ChannelID       int
-	TwitchID        int
+	PlatformID      int
+	ChannelID       string
 	Title           string
 	Duration        string
 	CreatedAt       time.Time
@@ -18,14 +18,16 @@ type Video struct {
 
 func (v *Video) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
-		TwitchID  int
-		Title     string
-		Duration  string
-		CreatedAt time.Time
+		ID         string
+		PlatformID int
+		Title      string
+		Duration   string
+		CreatedAt  time.Time
 	}{
-		TwitchID:  v.TwitchID,
-		Title:     v.Title,
-		Duration:  v.Duration,
-		CreatedAt: v.CreatedAt,
+		ID:         v.ID,
+		PlatformID: v.PlatformID,
+		Title:      v.Title,
+		Duration:   v.Duration,
+		CreatedAt:  v.CreatedAt,
 	})
 }

@@ -47,7 +47,6 @@ func (m *PlayerModel) InsertMany(players []models.Player) (int64, error) {
 		valueStrings = append(valueStrings, "(?, ?, ?, ?, ?, ?, ?)")
 		valueArgs = append(valueArgs, p.PlayerID)
 		valueArgs = append(valueArgs, p.Name)
-		fmt.Println(p.Name)
 		valueArgs = append(valueArgs, p.Race)
 		valueArgs = append(valueArgs, p.Team)
 		valueArgs = append(valueArgs, p.Country)

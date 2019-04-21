@@ -31,15 +31,15 @@ func (app *application) getVideosByCategory(w http.ResponseWriter, r *http.Reque
 }
 
 func (app *application) getVideosFromTwitch(w http.ResponseWriter, r *http.Request) {
-	tcs, err := app.twitchChannels.SelectAll()
+	channels, err := app.channels.SelectAll()
 	if err != nil {
 		app.serverError(w, err)
 		return
 	}
 
 	var videosToInsert []*models.Video
-	for _, tc := range tcs {
-		videos, err := app.getTwitchVideos(tc)
+	for _, channel := range channels {
+		videos, err := app.getTwitchVideos(channel)
 		if err != nil {
 			app.serverError(w, err)
 			return
@@ -50,14 +50,11 @@ func (app *application) getVideosFromTwitch(w http.ResponseWriter, r *http.Reque
 			if err != nil {
 				createdAt = time.Now()
 			}
-			videoID, err := strconv.Atoi(v.ID)
-			if err != nil {
-				continue
-			}
 			videoToInsert := &models.Video{
-				EventCategoryID: tc.EventCategoryID,
-				TwitchID:        videoID,
-				ChannelID:       tc.ID,
+				ID:              v.ID,
+				EventCategoryID: channel.EventCategoryID,
+				ChannelID:       channel.ID,
+				PlatformID:      channel.PlatformID,
 				Title:           v.Title,
 				Duration:        v.Duration,
 				CreatedAt:       createdAt,

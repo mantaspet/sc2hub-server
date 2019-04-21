@@ -18,7 +18,7 @@ func (app *application) getChannelsByCategory(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	res, err := app.twitchChannels.SelectByCategory(id)
+	res, err := app.channels.SelectByCategory(id)
 	if err != nil {
 		app.serverError(w, err)
 		return
@@ -46,20 +46,29 @@ func (app *application) addChannelToCategory(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	index := strings.Index(req.URL, "twitch.tv/")
+	twitchIndex := strings.Index(req.URL, "twitch.tv/")
+	youtubeIndex := strings.Index(req.URL, "youtube.com/user/")
 
-	if index > -1 {
-		req.URL = req.URL[index+10:]
-		index = strings.Index(req.URL, "/")
-		if index > -1 {
-			req.URL = req.URL[:index]
+	var channel models.Channel
+	if twitchIndex > -1 {
+		req.URL = req.URL[twitchIndex+10:]
+		twitchIndex = strings.Index(req.URL, "/")
+		if twitchIndex > -1 {
+			req.URL = req.URL[:twitchIndex]
 		}
+		channel, err = app.getChannelDataByLogin(req.URL)
+	} else if youtubeIndex > -1 {
+		req.URL = req.URL[youtubeIndex+17:]
+		youtubeIndex = strings.Index(req.URL, "/")
+		if youtubeIndex > -1 {
+			req.URL = req.URL[:youtubeIndex]
+		}
+		channel, err = app.getYoutubeChannelDataByLogin(req.URL)
 	} else {
-		app.validationError(w, map[string]string{"url": "Must be a valid twitch.tv channel URL"})
+		app.validationError(w, map[string]string{"url": "Must be a valid twitch.tv or youtube.com channel URL"})
 		return
 	}
 
-	tc, err := app.getChannelDataByLogin(req.URL)
 	if err != nil {
 		if index := strings.Index(err.Error(), "channel does not exist"); index > -1 {
 			app.validationError(w, map[string]string{"url": "Channel does not exist"})
@@ -69,8 +78,9 @@ func (app *application) addChannelToCategory(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	tc.EventCategoryID = id
-	res, err := app.twitchChannels.Insert(tc)
+	channel.EventCategoryID = id
+	channel.Login = req.URL
+	res, err := app.channels.Insert(channel)
 	if err != nil {
 		if index := strings.Index(err.Error(), "Duplicate entry"); index > -1 {
 			app.validationError(w, map[string]string{"url": "This channel is already in database"})
@@ -84,13 +94,13 @@ func (app *application) addChannelToCategory(w http.ResponseWriter, r *http.Requ
 }
 
 func (app *application) deleteChannel(w http.ResponseWriter, r *http.Request) {
-	idParam := chi.URLParam(r, "id")
-	id, err := strconv.Atoi(idParam)
-	if err != nil {
-		app.clientError(w, http.StatusBadRequest, err)
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		app.clientError(w, http.StatusBadRequest, errors.New("must specify channel ID"))
+		return
 	}
 
-	err = app.twitchChannels.Delete(id)
+	err := app.channels.Delete(id)
 	if err == models.ErrNotFound {
 		app.clientError(w, http.StatusNotFound, errors.New("twitch channel with a specified ID does not exist"))
 		return

@@ -40,10 +40,10 @@ type application struct {
 	articles interface {
 		SelectByCategory(categoryID int) ([]models.Article, error)
 	}
-	twitchChannels interface {
-		SelectAll() ([]*models.TwitchChannel, error)
-		SelectByCategory(categoryID int) ([]*models.TwitchChannel, error)
-		Insert(tc models.TwitchChannel) (*models.TwitchChannel, error)
-		Delete(id int) error
+	channels interface {
+		SelectAll() ([]*models.Channel, error)
+		SelectByCategory(categoryID int) ([]*models.Channel, error)
+		Insert(tc models.Channel) (*models.Channel, error)
+		Delete(id string) error
 	}
 }
