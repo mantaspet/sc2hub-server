@@ -5,7 +5,6 @@ import (
 	"github.com/mantaspet/sc2hub-server/pkg/models"
 	"net/http"
 	"strconv"
-	"time"
 )
 
 func (app *application) getVideosByCategory(w http.ResponseWriter, r *http.Request) {
@@ -31,35 +30,28 @@ func (app *application) getVideosByCategory(w http.ResponseWriter, r *http.Reque
 }
 
 func (app *application) getVideosFromTwitch(w http.ResponseWriter, r *http.Request) {
-	channels, err := app.channels.SelectAll()
+	channels, err := app.channels.SelectFromAllCategories()
 	if err != nil {
 		app.serverError(w, err)
 		return
 	}
 
+	var videos []*models.Video
 	var videosToInsert []*models.Video
 	for _, channel := range channels {
-		videos, err := app.getTwitchVideos(channel)
+		if channel.PlatformID == 1 {
+			videos, err = app.getTwitchVideos(channel)
+		} else if channel.PlatformID == 2 {
+			videos, err = app.getYoutubeVideos(channel)
+		}
+
 		if err != nil {
 			app.serverError(w, err)
 			return
 		}
 
-		for _, v := range videos {
-			createdAt, err := time.Parse("2006-01-02T15:04:05Z", v.CreatedAt)
-			if err != nil {
-				createdAt = time.Now()
-			}
-			videoToInsert := &models.Video{
-				ID:              v.ID,
-				EventCategoryID: channel.EventCategoryID,
-				ChannelID:       channel.ID,
-				PlatformID:      channel.PlatformID,
-				Title:           v.Title,
-				Duration:        v.Duration,
-				CreatedAt:       createdAt,
-			}
-			videosToInsert = append(videosToInsert, videoToInsert)
+		if len(videos) > 0 {
+			videosToInsert = append(videosToInsert, videos...)
 		}
 	}
 

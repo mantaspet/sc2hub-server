@@ -20,6 +20,7 @@ func (m *VideoModel) SelectByCategory(categoryID int, query string) ([]*models.V
 			COALESCE(channel_id, '') as channel_id,
 			title,
 			duration,
+			thumbnail_url,
 			created_at
 	  	FROM videos
 	  	WHERE event_category_id=? AND title LIKE ?
@@ -34,7 +35,7 @@ func (m *VideoModel) SelectByCategory(categoryID int, query string) ([]*models.V
 	videos := []*models.Video{}
 	for rows.Next() {
 		v := &models.Video{}
-		err := rows.Scan(&v.ID, &v.EventID, &v.EventCategoryID, &v.PlatformID, &v.ChannelID, &v.Title, &v.Duration, &v.CreatedAt)
+		err := rows.Scan(&v.ID, &v.EventID, &v.EventCategoryID, &v.PlatformID, &v.ChannelID, &v.Title, &v.Duration, &v.ThumbnailURL, &v.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -50,23 +51,28 @@ func (m *VideoModel) SelectByCategory(categoryID int, query string) ([]*models.V
 
 func (m *VideoModel) InsertOrUpdateMany(videos []*models.Video) (int64, error) {
 	valueStrings := make([]string, 0, len(videos))
-	valueArgs := make([]interface{}, 0, len(videos)*7)
+	valueArgs := make([]interface{}, 0, len(videos)*8)
 	for _, v := range videos {
-		valueStrings = append(valueStrings, "(?, ?, ?, ?, ?, ?, ?)")
+		valueStrings = append(valueStrings, "(?, ?, ?, ?, ?, ?, ?, ?)")
 		valueArgs = append(valueArgs, v.ID)
 		valueArgs = append(valueArgs, v.EventCategoryID)
 		valueArgs = append(valueArgs, v.PlatformID)
 		valueArgs = append(valueArgs, v.ChannelID)
 		valueArgs = append(valueArgs, v.Title)
 		valueArgs = append(valueArgs, v.Duration)
+		valueArgs = append(valueArgs, v.ThumbnailURL)
 		valueArgs = append(valueArgs, v.CreatedAt)
 	}
 
 	stmt := fmt.Sprintf(`
-		INSERT INTO videos(id, event_category_id, platform_id, channel_id, title, duration, created_at)
+		INSERT INTO videos(id, event_category_id, platform_id, channel_id, title, duration, thumbnail_url, created_at)
 		VALUES %s 
 		ON DUPLICATE KEY UPDATE
-			title=VALUES(title);`, strings.Join(valueStrings, ","))
+			title=VALUES(title),
+			duration=VALUES(duration),
+			thumbnail_url=VALUES(thumbnail_url),
+			created_at=VALUES(created_at);`,
+		strings.Join(valueStrings, ","))
 
 	res, err := m.DB.Exec(stmt, valueArgs...)
 	if err != nil {

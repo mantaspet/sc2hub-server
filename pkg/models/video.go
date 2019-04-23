@@ -13,21 +13,24 @@ type Video struct {
 	ChannelID       string
 	Title           string
 	Duration        string
+	ThumbnailURL    string
 	CreatedAt       time.Time
 }
 
 func (v *Video) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
-		ID         string
-		PlatformID int
-		Title      string
-		Duration   string
-		CreatedAt  time.Time
+		ID           string
+		PlatformID   int
+		Title        string
+		Duration     string
+		ThumbnailURL string
+		CreatedAt    time.Time
 	}{
-		ID:         v.ID,
-		PlatformID: v.PlatformID,
-		Title:      v.Title,
-		Duration:   v.Duration,
-		CreatedAt:  v.CreatedAt,
+		ID:           v.ID,
+		PlatformID:   v.PlatformID,
+		Title:        v.Title,
+		Duration:     v.Duration,
+		ThumbnailURL: v.ThumbnailURL,
+		CreatedAt:    v.CreatedAt,
 	})
 }

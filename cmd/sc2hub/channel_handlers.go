@@ -27,6 +27,9 @@ func (app *application) getChannelsByCategory(w http.ResponseWriter, r *http.Req
 	app.json(w, res)
 }
 
+// checks if URL points to a valid twitch or youtube channel,
+// fetches it's data from twitch or youtube api,
+// stores it inside our database
 func (app *application) addChannelToCategory(w http.ResponseWriter, r *http.Request) {
 	idParam := chi.URLParam(r, "id")
 	id, err := strconv.Atoi(idParam)
@@ -78,9 +81,8 @@ func (app *application) addChannelToCategory(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	channel.EventCategoryID = id
 	channel.Login = req.URL
-	res, err := app.channels.Insert(channel)
+	res, err := app.channels.Insert(channel, id)
 	if err != nil {
 		if index := strings.Index(err.Error(), "Duplicate entry"); index > -1 {
 			app.validationError(w, map[string]string{"url": "This channel is already in database"})

@@ -41,9 +41,9 @@ type application struct {
 		SelectByCategory(categoryID int) ([]models.Article, error)
 	}
 	channels interface {
-		SelectAll() ([]*models.Channel, error)
+		SelectFromAllCategories() ([]*models.Channel, error)
 		SelectByCategory(categoryID int) ([]*models.Channel, error)
-		Insert(tc models.Channel) (*models.Channel, error)
+		Insert(channel models.Channel, categoryID int) (*models.Channel, error)
 		Delete(id string) error
 	}
 }

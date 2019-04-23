@@ -6,6 +6,10 @@ import (
 	"github.com/mantaspet/sc2hub-server/pkg/models"
 )
 
+func (app *application) getYoutubeVideos(channel *models.Channel) ([]*models.Video, error) {
+	return nil, nil
+}
+
 func (app *application) getYoutubeChannelDataByLogin(login string) (models.Channel, error) {
 	var yc models.Channel
 	url := "https://www.googleapis.com/youtube/v3/channels" +

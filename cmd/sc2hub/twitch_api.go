@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"github.com/mantaspet/sc2hub-server/pkg/models"
 	"net/http"
+	"strings"
+	"time"
 )
 
 type TwitchVideo struct {
@@ -56,7 +58,7 @@ func (app *application) getTwitchAccessToken() error {
 	return nil
 }
 
-func (app *application) getTwitchVideos(channel *models.Channel) ([]TwitchVideo, error) {
+func (app *application) getTwitchVideos(channel *models.Channel) ([]*models.Video, error) {
 	url := "https://api.twitch.tv/helix/videos?user_id=" + channel.ID
 
 	req, _ := http.NewRequest("GET", url, nil)
@@ -85,7 +87,29 @@ func (app *application) getTwitchVideos(channel *models.Channel) ([]TwitchVideo,
 		return nil, err
 	}
 
-	return data.Data, nil
+	var videos []*models.Video
+	for _, v := range data.Data {
+		if strings.Contains(strings.ToLower(v.Title), channel.Pattern) != true {
+			continue
+		}
+		createdAt, err := time.Parse("2006-01-02T15:04:05Z", v.CreatedAt)
+		if err != nil {
+			createdAt = time.Now()
+		}
+		video := &models.Video{
+			ID:              v.ID,
+			PlatformID:      1,
+			EventCategoryID: channel.EventCategoryID,
+			ChannelID:       channel.ID,
+			Title:           v.Title,
+			Duration:        v.Duration,
+			ThumbnailURL:    v.ThumbnailURL,
+			CreatedAt:       createdAt,
+		}
+		videos = append(videos, video)
+	}
+
+	return videos, nil
 }
 
 func (app *application) getChannelDataByLogin(login string) (models.Channel, error) {
