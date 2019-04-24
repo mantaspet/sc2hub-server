@@ -25,6 +25,7 @@ func (app *application) router() chi.Router {
 		r.Get("/{id}/articles", app.getArticlesByCategory)
 		r.Get("/{id}/channels", app.getChannelsByCategory)
 		r.Post("/{id}/channels", app.addChannelToCategory)
+		r.Delete("/{categoryID}/channels/{channelID}", app.deleteCategoryChannel)
 		r.Post("/", app.createEventCategory)
 		r.Put("/{id}", app.updateEventCategory)
 		r.Put("/reorder", app.reorderEventCategories)
@@ -39,11 +40,6 @@ func (app *application) router() chi.Router {
 
 	r.Route("/videos", func(r chi.Router) {
 		r.Get("/from-twitch", app.getVideosFromTwitch)
-	})
-
-	r.Route("/channels", func(r chi.Router) {
-		r.Delete("/{id}", app.deleteChannel)
-		r.Options("/*", app.genericPreflightHandler)
 	})
 
 	r.Route("/twitch", func(r chi.Router) {

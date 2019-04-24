@@ -95,16 +95,22 @@ func (app *application) addChannelToCategory(w http.ResponseWriter, r *http.Requ
 	app.json(w, res)
 }
 
-func (app *application) deleteChannel(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
-	if id == "" {
+func (app *application) deleteCategoryChannel(w http.ResponseWriter, r *http.Request) {
+	channelID := chi.URLParam(r, "channelID")
+	if channelID == "" {
 		app.clientError(w, http.StatusBadRequest, errors.New("must specify channel ID"))
 		return
 	}
 
-	err := app.channels.Delete(id)
+	categoryID, err := strconv.Atoi(chi.URLParam(r, "categoryID"))
+	if err != nil || categoryID < 1 {
+		app.clientError(w, http.StatusBadRequest, errors.New("must specify a valid category ID"))
+		return
+	}
+
+	err = app.channels.DeleteFromCategory(channelID, categoryID)
 	if err == models.ErrNotFound {
-		app.clientError(w, http.StatusNotFound, errors.New("twitch channel with a specified ID does not exist"))
+		app.clientError(w, http.StatusNotFound, errors.New("no channel found in category"))
 		return
 	} else if err != nil {
 		if strings.Contains(err.Error(), "foreign key constraint fails") {

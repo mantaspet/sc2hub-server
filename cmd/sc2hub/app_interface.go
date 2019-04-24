@@ -44,6 +44,6 @@ type application struct {
 		SelectFromAllCategories() ([]*models.Channel, error)
 		SelectByCategory(categoryID int) ([]*models.Channel, error)
 		Insert(channel models.Channel, categoryID int) (*models.Channel, error)
-		Delete(id string) error
+		DeleteFromCategory(channelID string, categoryID int) error
 	}
 }

@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/mantaspet/sc2hub-server/pkg/models"
 )
 
@@ -110,10 +111,14 @@ func (m *ChannelModel) Insert(channel models.Channel, categoryID int) (*models.C
 	return res, err
 }
 
-func (m *ChannelModel) Delete(id string) error {
-	stmt := `DELETE FROM channels WHERE id=?`
+func (m *ChannelModel) DeleteFromCategory(channelID string, categoryID int) error {
+	tx, err := m.DB.Begin()
+	if err != nil {
+		return err
+	}
 
-	res, err := m.DB.Exec(stmt, id)
+	stmt := `DELETE FROM event_category_channels WHERE channel_id=? AND event_category_id=?`
+	res, err := tx.Exec(stmt, channelID, categoryID)
 	if err != nil {
 		return err
 	}
@@ -125,5 +130,29 @@ func (m *ChannelModel) Delete(id string) error {
 		return err
 	}
 
-	return err
+	var count int64
+	stmt = `SELECT COUNT(*) FROM event_category_channels WHERE channel_id=?`
+	err = tx.QueryRow(stmt, channelID).Scan(&count)
+	fmt.Println(count)
+	if count > 0 {
+		return tx.Commit()
+	}
+
+	stmt = `DELETE FROM channels WHERE id=?`
+	res, err = tx.Exec(stmt, channelID)
+	if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+
+	rowCnt, err = res.RowsAffected()
+	if rowCnt == 0 {
+		_ = tx.Rollback()
+		return models.ErrNotFound
+	} else if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+
+	return tx.Commit()
 }
