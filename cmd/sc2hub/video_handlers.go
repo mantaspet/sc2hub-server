@@ -29,7 +29,7 @@ func (app *application) getVideosByCategory(w http.ResponseWriter, r *http.Reque
 	app.json(w, res)
 }
 
-func (app *application) getVideosFromTwitch(w http.ResponseWriter, r *http.Request) {
+func (app *application) queryVideoAPIs(w http.ResponseWriter, r *http.Request) {
 	channels, err := app.channels.SelectFromAllCategories()
 	if err != nil {
 		app.serverError(w, err)
@@ -51,6 +51,7 @@ func (app *application) getVideosFromTwitch(w http.ResponseWriter, r *http.Reque
 		}
 
 		if len(videos) > 0 {
+			app.videos.InsertOrUpdateMany(videosToInsert)
 			videosToInsert = append(videosToInsert, videos...)
 		}
 	}

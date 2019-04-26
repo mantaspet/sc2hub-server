@@ -39,7 +39,7 @@ func (app *application) router() chi.Router {
 	})
 
 	r.Route("/videos", func(r chi.Router) {
-		r.Get("/from-twitch", app.getVideosFromTwitch)
+		r.Get("/query-apis", app.queryVideoAPIs)
 	})
 
 	r.Route("/twitch", func(r chi.Router) {

@@ -4,10 +4,71 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/mantaspet/sc2hub-server/pkg/models"
+	"strings"
+	"time"
 )
 
+type YoutubeVideo struct {
+	Id struct {
+		VideoId string
+	}
+	Snippet struct {
+		PublishedAt string
+		Title       string
+		Thumbnails  struct {
+			Medium struct {
+				Url string
+			}
+		}
+	}
+}
+
 func (app *application) getYoutubeVideos(channel *models.Channel) ([]*models.Video, error) {
-	return nil, nil
+	url := "https://www.googleapis.com/youtube/v3/search" +
+		"?key=AIzaSyA_NiC_FDPJZsLicC9mkZTmQ1o9rx_tcbs" +
+		"&channelId=" + channel.ID +
+		"&part=snippet,id" +
+		"&order=date" +
+		"&maxResults=20"
+
+	res, err := app.httpClient.Get(url)
+	if err != nil {
+		return nil, err
+	}
+
+	type Response struct {
+		Items []YoutubeVideo
+	}
+
+	var data Response
+	defer res.Body.Close()
+	err = json.NewDecoder(res.Body).Decode(&data)
+	if err != nil {
+		return nil, err
+	}
+
+	var videos []*models.Video
+	for _, v := range data.Items {
+		if strings.Contains(strings.ToLower(v.Snippet.Title), channel.Pattern) != true {
+			continue
+		}
+		createdAt, err := time.Parse("2006-01-02T15:04:05.000Z", v.Snippet.PublishedAt)
+		if err != nil {
+			createdAt = time.Now()
+		}
+		video := &models.Video{
+			ID:              v.Id.VideoId,
+			PlatformID:      2,
+			EventCategoryID: channel.EventCategoryID,
+			ChannelID:       channel.ID,
+			Title:           v.Snippet.Title,
+			ThumbnailURL:    v.Snippet.Thumbnails.Medium.Url,
+			CreatedAt:       createdAt,
+		}
+		videos = append(videos, video)
+	}
+
+	return videos, nil
 }
 
 func (app *application) getYoutubeChannelData(login string, id string) (models.Channel, error) {
