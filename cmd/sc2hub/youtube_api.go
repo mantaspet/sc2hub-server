@@ -10,13 +10,21 @@ func (app *application) getYoutubeVideos(channel *models.Channel) ([]*models.Vid
 	return nil, nil
 }
 
-func (app *application) getYoutubeChannelDataByLogin(login string) (models.Channel, error) {
+func (app *application) getYoutubeChannelData(login string, id string) (models.Channel, error) {
 	var yc models.Channel
 	url := "https://www.googleapis.com/youtube/v3/channels" +
 		"?key=AIzaSyA2vHJcCFGgAKJv-g_l81lcNHxic9V4s3Y" +
 		"&part=id,snippet" +
-		"&fields=items(id,snippet(title,thumbnails(default)))" +
-		"&forUsername=" + login
+		"&fields=items(id,snippet(title,customUrl,thumbnails(default)))"
+
+	if login != "" {
+		url += "&forUsername=" + login
+	} else if id != "" {
+		url += "&id=" + id
+	} else {
+		return yc, errors.New("need to specify either login or id")
+	}
+
 	resp, err := app.httpClient.Get(url)
 	if err != nil {
 		return yc, err
@@ -27,6 +35,7 @@ func (app *application) getYoutubeChannelDataByLogin(login string) (models.Chann
 			Id      string
 			Snippet struct {
 				Title      string
+				CustomUrl  string
 				Thumbnails struct {
 					Default struct {
 						Url string
@@ -44,6 +53,7 @@ func (app *application) getYoutubeChannelDataByLogin(login string) (models.Chann
 
 	yc = models.Channel{
 		ID:              resBody.Items[0].Id,
+		Login:           resBody.Items[0].Snippet.CustomUrl,
 		PlatformID:      2,
 		Title:           resBody.Items[0].Snippet.Title,
 		ProfileImageURL: resBody.Items[0].Snippet.Thumbnails.Default.Url,

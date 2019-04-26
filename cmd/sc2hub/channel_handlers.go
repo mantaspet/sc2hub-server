@@ -50,7 +50,8 @@ func (app *application) addChannelToCategory(w http.ResponseWriter, r *http.Requ
 	}
 
 	twitchIndex := strings.Index(req.URL, "twitch.tv/")
-	youtubeIndex := strings.Index(req.URL, "youtube.com/user/")
+	youtubeIndex1 := strings.Index(req.URL, "youtube.com/user/")
+	youtubeIndex2 := strings.Index(req.URL, "youtube.com/channel/")
 
 	var channel models.Channel
 	if twitchIndex > -1 {
@@ -60,13 +61,20 @@ func (app *application) addChannelToCategory(w http.ResponseWriter, r *http.Requ
 			req.URL = req.URL[:twitchIndex]
 		}
 		channel, err = app.getChannelDataByLogin(req.URL)
-	} else if youtubeIndex > -1 {
-		req.URL = req.URL[youtubeIndex+17:]
-		youtubeIndex = strings.Index(req.URL, "/")
-		if youtubeIndex > -1 {
-			req.URL = req.URL[:youtubeIndex]
+	} else if youtubeIndex1 > -1 {
+		req.URL = req.URL[youtubeIndex1+17:]
+		youtubeIndex1 = strings.Index(req.URL, "/")
+		if youtubeIndex1 > -1 {
+			req.URL = req.URL[:youtubeIndex1]
 		}
-		channel, err = app.getYoutubeChannelDataByLogin(req.URL)
+		channel, err = app.getYoutubeChannelData(req.URL, "")
+	} else if youtubeIndex2 > -1 {
+		req.URL = req.URL[youtubeIndex2+20:]
+		youtubeIndex2 = strings.Index(req.URL, "/")
+		if youtubeIndex2 > -1 {
+			req.URL = req.URL[:youtubeIndex2]
+		}
+		channel, err = app.getYoutubeChannelData("", req.URL)
 	} else {
 		app.validationError(w, map[string]string{"url": "Must be a valid twitch.tv or youtube.com channel URL"})
 		return
@@ -81,7 +89,6 @@ func (app *application) addChannelToCategory(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	channel.Login = req.URL
 	res, err := app.channels.Insert(channel, id)
 	if err != nil {
 		if index := strings.Index(err.Error(), "Duplicate entry"); index > -1 {
