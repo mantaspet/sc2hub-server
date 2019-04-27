@@ -5,6 +5,7 @@ import (
 	"github.com/mantaspet/sc2hub-server/pkg/models"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 func (app *application) getVideosByCategory(w http.ResponseWriter, r *http.Request) {
@@ -21,6 +22,28 @@ func (app *application) getVideosByCategory(w http.ResponseWriter, r *http.Reque
 	}
 
 	res, err := app.videos.SelectByCategory(id, query)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	app.json(w, res)
+}
+
+func (app *application) getVideosByPlayer(w http.ResponseWriter, r *http.Request) {
+	idParam := chi.URLParam(r, "id")
+	var query string
+	if r.URL.Query()["query"] != nil {
+		query = r.URL.Query()["query"][0]
+	}
+
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	res, err := app.videos.SelectByPlayer(id, query)
 	if err != nil {
 		app.serverError(w, err)
 		return
@@ -51,7 +74,6 @@ func (app *application) queryVideoAPIs(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if len(videos) > 0 {
-			app.videos.InsertOrUpdateMany(videosToInsert)
 			videosToInsert = append(videosToInsert, videos...)
 		}
 	}
@@ -61,6 +83,31 @@ func (app *application) queryVideoAPIs(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 		return
 	}
+
+	players, err := app.players.SelectAllPlayerIDs()
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	var playerVideos []models.PlayerVideo
+	for _, v := range videosToInsert {
+		for _, p := range players {
+			if strings.Contains(v.Title, p.PlayerID) {
+				playerVideo := models.PlayerVideo{
+					PlayerID: p.ID,
+					VideoID:  v.ID,
+				}
+				playerVideos = append(playerVideos, playerVideo)
+				break
+			}
+		}
+	}
+	_, err = app.players.InsertPlayerVideos(playerVideos)
+	if err != nil {
+		app.serverError(w, err)
+	}
+
 	rowCntStr := strconv.Itoa(int(rowCnt))
 	res := "Rows affected: " + rowCntStr
 

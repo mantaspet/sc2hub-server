@@ -14,3 +14,8 @@ type Player struct {
 	StreamURL     string
 	IsRetired     bool
 }
+
+type PlayerVideo struct {
+	PlayerID int
+	VideoID  string
+}

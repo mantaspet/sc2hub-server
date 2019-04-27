@@ -3,20 +3,42 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/go-chi/chi"
 	"github.com/mantaspet/sc2hub-server/pkg/crawlers"
+	"github.com/mantaspet/sc2hub-server/pkg/models"
 	"net/http"
 	"strconv"
 	"time"
 )
 
 func (app *application) getAllPlayers(w http.ResponseWriter, r *http.Request) {
-	events, err := app.players.SelectAllPlayers()
+	events, err := app.players.SelectAll()
 	if err != nil {
 		app.serverError(w, err)
 		return
 	}
 
 	app.json(w, events)
+}
+
+func (app *application) getPlayer(w http.ResponseWriter, r *http.Request) {
+	idParam := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	res, err := app.players.SelectOne(id)
+	if err == models.ErrNotFound {
+		app.clientError(w, http.StatusNotFound, errors.New("player with a specified ID does not exist"))
+		return
+	} else if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	app.json(w, res)
 }
 
 func (app *application) crawlPlayers(w http.ResponseWriter, r *http.Request) {

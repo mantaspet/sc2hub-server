@@ -14,10 +14,10 @@ type VideoModel struct {
 func (m *VideoModel) SelectByCategory(categoryID int, query string) ([]*models.Video, error) {
 	stmt := `SELECT
 			id,
-			COALESCE(event_id, 0) as event_id,
-			COALESCE(event_category_id, 0) as event_category_id,
+			COALESCE(event_id, 0),
+			COALESCE(event_category_id, 0),
 			platform_id,
-			COALESCE(channel_id, '') as channel_id,
+			COALESCE(channel_id, ''),
 			title,
 			duration,
 			thumbnail_url,
@@ -35,7 +35,49 @@ func (m *VideoModel) SelectByCategory(categoryID int, query string) ([]*models.V
 	videos := []*models.Video{}
 	for rows.Next() {
 		v := &models.Video{}
-		err := rows.Scan(&v.ID, &v.EventID, &v.EventCategoryID, &v.PlatformID, &v.ChannelID, &v.Title, &v.Duration, &v.ThumbnailURL, &v.CreatedAt)
+		err := rows.Scan(&v.ID, &v.EventID, &v.EventCategoryID, &v.PlatformID, &v.ChannelID, &v.Title, &v.Duration,
+			&v.ThumbnailURL, &v.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		videos = append(videos, v)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	return videos, nil
+}
+
+func (m *VideoModel) SelectByPlayer(playerID int, query string) ([]*models.Video, error) {
+	stmt := `
+		SELECT
+			videos.id,
+			COALESCE(videos.event_id, 0),
+			COALESCE(videos.event_category_id, 0),
+			videos.platform_id,
+			COALESCE(videos.channel_id, ''),
+			videos.title,
+			videos.duration,
+			videos.thumbnail_url,
+			videos.created_at
+		FROM videos
+		INNER JOIN player_videos
+		ON player_videos.video_id=videos.id
+		WHERE player_videos.player_id=? AND title LIKE ?`
+
+	rows, err := m.DB.Query(stmt, playerID, "%"+query+"%")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	videos := []*models.Video{}
+	for rows.Next() {
+		v := &models.Video{}
+		err := rows.Scan(&v.ID, &v.EventID, &v.EventCategoryID, &v.PlatformID, &v.ChannelID, &v.Title, &v.Duration,
+			&v.ThumbnailURL, &v.CreatedAt)
 		if err != nil {
 			return nil, err
 		}

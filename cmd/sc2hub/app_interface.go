@@ -30,11 +30,15 @@ type application struct {
 		LoadOnEvents(events []*models.Event) ([]*models.Event, error)
 	}
 	players interface {
-		SelectAllPlayers() ([]*models.Player, error)
+		SelectAll() ([]*models.Player, error)
+		SelectOne(id int) (*models.Player, error)
+		SelectAllPlayerIDs() ([]*models.Player, error)
 		InsertMany(players []models.Player) (int64, error)
+		InsertPlayerVideos(playerVideos []models.PlayerVideo) (int64, error)
 	}
 	videos interface {
 		SelectByCategory(categoryID int, query string) ([]*models.Video, error)
+		SelectByPlayer(playerID int, query string) ([]*models.Video, error)
 		InsertOrUpdateMany(videos []*models.Video) (int64, error)
 	}
 	articles interface {
