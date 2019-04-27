@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/mantaspet/sc2hub-server/pkg/models"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -13,9 +14,10 @@ type YoutubeVideo struct {
 		VideoId string
 	}
 	Snippet struct {
-		PublishedAt string
-		Title       string
-		Thumbnails  struct {
+		PublishedAt          string
+		Title                string
+		LiveBroadcastContent string
+		Thumbnails           struct {
 			Medium struct {
 				Url string
 			}
@@ -27,9 +29,11 @@ func (app *application) getYoutubeVideos(channel *models.Channel) ([]*models.Vid
 	url := "https://www.googleapis.com/youtube/v3/search" +
 		"?key=AIzaSyA_NiC_FDPJZsLicC9mkZTmQ1o9rx_tcbs" +
 		"&channelId=" + channel.ID +
+		"&type=video" +
 		"&part=snippet,id" +
+		"&fields=items(id,snippet(publishedAt,title,liveBroadcastContent,thumbnails(medium(url))))" +
 		"&order=date" +
-		"&maxResults=20"
+		"&maxResults=50"
 
 	res, err := app.httpClient.Get(url)
 	if err != nil {
@@ -49,6 +53,13 @@ func (app *application) getYoutubeVideos(channel *models.Channel) ([]*models.Vid
 
 	var videos []*models.Video
 	for _, v := range data.Items {
+		if v.Snippet.LiveBroadcastContent != "none" {
+			continue
+		}
+		match, _ := regexp.MatchString("^[[[:ascii:]]+$", v.Snippet.Title) // to exclude videos with non-english titles
+		if match != true {
+			continue
+		}
 		if strings.Contains(strings.ToLower(v.Snippet.Title), channel.Pattern) != true {
 			continue
 		}
