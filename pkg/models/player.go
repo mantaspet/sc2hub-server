@@ -1,5 +1,7 @@
 package models
 
+var PlayerPageLength = 36
+
 type Player struct {
 	ID            int
 	PlayerID      string
@@ -13,6 +15,11 @@ type Player struct {
 	ImageURL      string
 	StreamURL     string
 	IsRetired     bool
+}
+
+type PaginatedPlayers struct {
+	Items  []*Player
+	Cursor *int
 }
 
 type PlayerVideo struct {

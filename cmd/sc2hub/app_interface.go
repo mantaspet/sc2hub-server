@@ -30,7 +30,7 @@ type application struct {
 		LoadOnEvents(events []*models.Event) ([]*models.Event, error)
 	}
 	players interface {
-		SelectAll() ([]*models.Player, error)
+		SelectPage(fromID int) ([]*models.Player, error)
 		SelectOne(id int) (*models.Player, error)
 		SelectAllPlayerIDs() ([]*models.Player, error)
 		InsertMany(players []models.Player) (int64, error)

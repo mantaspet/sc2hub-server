@@ -11,13 +11,15 @@ type PlayerModel struct {
 	DB *sql.DB
 }
 
-func (m *PlayerModel) SelectAll() ([]*models.Player, error) {
+func (m *PlayerModel) SelectPage(fromID int) ([]*models.Player, error) {
 	stmt := `SELECT
 			id, player_id, name, race, team, country, total_earnings,
        		COALESCE(date_of_birth, '') as date_of_birth, liquipedia_url, image_url, stream_url, is_retired
-	  	FROM players`
+	  	FROM players
+		WHERE id>?
+	  	LIMIT ?`
 
-	rows, err := m.DB.Query(stmt)
+	rows, err := m.DB.Query(stmt, fromID, models.PlayerPageLength+1)
 	if err != nil {
 		return nil, err
 	}

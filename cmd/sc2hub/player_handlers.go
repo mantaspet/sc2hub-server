@@ -12,13 +12,34 @@ import (
 )
 
 func (app *application) getAllPlayers(w http.ResponseWriter, r *http.Request) {
-	events, err := app.players.SelectAll()
+	fromParam := r.URL.Query().Get("from")
+	from, err := strconv.Atoi(fromParam)
+	if err != nil && fromParam != "" {
+		app.clientError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	players, err := app.players.SelectPage(from)
 	if err != nil {
 		app.serverError(w, err)
 		return
 	}
 
-	app.json(w, events)
+	var res models.PaginatedPlayers
+	itemCount := len(players)
+	if itemCount < models.PlayerPageLength {
+		res = models.PaginatedPlayers{
+			Cursor: nil,
+			Items:  players,
+		}
+	} else {
+		res = models.PaginatedPlayers{
+			Cursor: &players[itemCount-1].ID,
+			Items:  players[:itemCount-1],
+		}
+	}
+
+	app.json(w, res)
 }
 
 func (app *application) getPlayer(w http.ResponseWriter, r *http.Request) {
