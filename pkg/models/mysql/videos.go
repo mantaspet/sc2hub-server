@@ -11,10 +11,37 @@ type VideoModel struct {
 	DB *sql.DB
 }
 
+func (m *VideoModel) SelectEventBroadcasts(categoryID int, date string) ([]*models.Video, error) {
+	stmt := `SELECT
+			id,
+			COALESCE(event_category_id, 0),
+			platform_id,
+			COALESCE(channel_id, ''),
+			title,
+			duration,
+			thumbnail_url,
+			created_at
+	  	FROM videos
+	  	WHERE event_category_id=? AND created_at LIKE ? AND type='archive'
+		ORDER BY created_at DESC`
+
+	rows, err := m.DB.Query(stmt, categoryID, "%"+date+"%")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	videos, err := parseVideoRows(rows)
+	if err != nil {
+		return nil, err
+	}
+
+	return videos, nil
+}
+
 func (m *VideoModel) SelectByCategory(categoryID int, query string) ([]*models.Video, error) {
 	stmt := `SELECT
 			id,
-			COALESCE(event_id, 0),
 			COALESCE(event_category_id, 0),
 			platform_id,
 			COALESCE(channel_id, ''),
@@ -32,17 +59,7 @@ func (m *VideoModel) SelectByCategory(categoryID int, query string) ([]*models.V
 	}
 	defer rows.Close()
 
-	videos := []*models.Video{}
-	for rows.Next() {
-		v := &models.Video{}
-		err := rows.Scan(&v.ID, &v.EventID, &v.EventCategoryID, &v.PlatformID, &v.ChannelID, &v.Title, &v.Duration,
-			&v.ThumbnailURL, &v.CreatedAt)
-		if err != nil {
-			return nil, err
-		}
-		videos = append(videos, v)
-	}
-	err = rows.Err()
+	videos, err := parseVideoRows(rows)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +71,6 @@ func (m *VideoModel) SelectByPlayer(playerID int, query string) ([]*models.Video
 	stmt := `
 		SELECT
 			videos.id,
-			COALESCE(videos.event_id, 0),
 			COALESCE(videos.event_category_id, 0),
 			videos.platform_id,
 			COALESCE(videos.channel_id, ''),
@@ -73,17 +89,7 @@ func (m *VideoModel) SelectByPlayer(playerID int, query string) ([]*models.Video
 	}
 	defer rows.Close()
 
-	videos := []*models.Video{}
-	for rows.Next() {
-		v := &models.Video{}
-		err := rows.Scan(&v.ID, &v.EventID, &v.EventCategoryID, &v.PlatformID, &v.ChannelID, &v.Title, &v.Duration,
-			&v.ThumbnailURL, &v.CreatedAt)
-		if err != nil {
-			return nil, err
-		}
-		videos = append(videos, v)
-	}
-	err = rows.Err()
+	videos, err := parseVideoRows(rows)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +101,7 @@ func (m *VideoModel) InsertOrUpdateMany(videos []*models.Video) (int64, error) {
 	valueStrings := make([]string, 0, len(videos))
 	valueArgs := make([]interface{}, 0, len(videos)*8)
 	for _, v := range videos {
-		valueStrings = append(valueStrings, "(?, ?, ?, ?, ?, ?, ?, ?)")
+		valueStrings = append(valueStrings, "(?, ?, ?, ?, ?, ?, ?, ?, ?)")
 		valueArgs = append(valueArgs, v.ID)
 		valueArgs = append(valueArgs, v.EventCategoryID)
 		valueArgs = append(valueArgs, v.PlatformID)
@@ -103,11 +109,12 @@ func (m *VideoModel) InsertOrUpdateMany(videos []*models.Video) (int64, error) {
 		valueArgs = append(valueArgs, v.Title)
 		valueArgs = append(valueArgs, v.Duration)
 		valueArgs = append(valueArgs, v.ThumbnailURL)
+		valueArgs = append(valueArgs, v.Type)
 		valueArgs = append(valueArgs, v.CreatedAt)
 	}
 
 	stmt := fmt.Sprintf(`
-		INSERT INTO videos(id, event_category_id, platform_id, channel_id, title, duration, thumbnail_url, created_at)
+		INSERT INTO videos(id, event_category_id, platform_id, channel_id, title, duration, thumbnail_url, type, created_at)
 		VALUES %s 
 		ON DUPLICATE KEY UPDATE
 			title=VALUES(title),
@@ -127,4 +134,22 @@ func (m *VideoModel) InsertOrUpdateMany(videos []*models.Video) (int64, error) {
 	}
 
 	return rowCnt, nil
+}
+
+func parseVideoRows(rows *sql.Rows) ([]*models.Video, error) {
+	videos := []*models.Video{}
+	for rows.Next() {
+		v := &models.Video{}
+		err := rows.Scan(&v.ID, &v.EventCategoryID, &v.PlatformID, &v.ChannelID, &v.Title, &v.Duration,
+			&v.ThumbnailURL, &v.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		videos = append(videos, v)
+	}
+	err := rows.Err()
+	if err != nil {
+		return nil, err
+	}
+	return videos, nil
 }

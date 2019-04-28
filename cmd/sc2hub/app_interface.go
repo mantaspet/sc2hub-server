@@ -36,6 +36,7 @@ type application struct {
 		InsertPlayerVideos(playerVideos []models.PlayerVideo) (int64, error)
 	}
 	videos interface {
+		SelectEventBroadcasts(categoryID int, date string) ([]*models.Video, error)
 		SelectByCategory(categoryID int, query string) ([]*models.Video, error)
 		SelectByPlayer(playerID int, query string) ([]*models.Video, error)
 		InsertOrUpdateMany(videos []*models.Video) (int64, error)
@@ -44,8 +45,8 @@ type application struct {
 		SelectByCategory(categoryID int) ([]models.Article, error)
 	}
 	channels interface {
-		SelectFromAllCategories() ([]*models.Channel, error)
-		SelectByCategory(categoryID int) ([]*models.Channel, error)
+		SelectFromAllCategories(platformID int) ([]*models.Channel, error)
+		SelectByCategory(categoryID int, platformID int) ([]*models.Channel, error)
 		Insert(channel models.Channel, categoryID int) (*models.Channel, error)
 		DeleteFromCategory(channelID string, categoryID int) error
 	}

@@ -104,6 +104,7 @@ func (app *application) getTwitchVideos(channel *models.Channel) ([]*models.Vide
 			Title:           v.Title,
 			Duration:        v.Duration,
 			ThumbnailURL:    v.ThumbnailURL,
+			Type:            v.Type,
 			CreatedAt:       createdAt,
 		}
 		videos = append(videos, video)

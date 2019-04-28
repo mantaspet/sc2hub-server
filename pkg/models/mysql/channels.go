@@ -9,7 +9,7 @@ type ChannelModel struct {
 	DB *sql.DB
 }
 
-func (m *ChannelModel) SelectFromAllCategories() ([]*models.Channel, error) {
+func (m *ChannelModel) SelectFromAllCategories(platformID int) ([]*models.Channel, error) {
 	stmt := `
 		SELECT channels.id, channels.platform_id, event_categories.id, event_categories.pattern
 		FROM event_category_channels
@@ -18,11 +18,15 @@ func (m *ChannelModel) SelectFromAllCategories() ([]*models.Channel, error) {
 		INNER JOIN event_categories
 		ON event_category_channels.event_category_id = event_categories.id`
 
-	rows, err := m.DB.Query(stmt)
-	if err != nil {
-		return nil, err
+	var rows *sql.Rows
+	var err error
+	// platform ID 0 should query all platforms
+	if platformID > 0 {
+		stmt += " AND platform_id=?"
+		rows, err = m.DB.Query(stmt, platformID)
+	} else {
+		rows, err = m.DB.Query(stmt)
 	}
-	defer rows.Close()
 
 	channels := []*models.Channel{}
 	for rows.Next() {
@@ -41,7 +45,7 @@ func (m *ChannelModel) SelectFromAllCategories() ([]*models.Channel, error) {
 	return channels, nil
 }
 
-func (m *ChannelModel) SelectByCategory(categoryID int) ([]*models.Channel, error) {
+func (m *ChannelModel) SelectByCategory(categoryID int, platformID int) ([]*models.Channel, error) {
 	stmt := `
 		SELECT channels.id, channels.platform_id, channels.login, channels.title, channels.profile_image_url
 		FROM channels
@@ -49,7 +53,17 @@ func (m *ChannelModel) SelectByCategory(categoryID int) ([]*models.Channel, erro
 		ON event_category_channels.channel_id=channels.id
 		WHERE event_category_channels.event_category_id=?`
 
-	rows, err := m.DB.Query(stmt, categoryID)
+	var rows *sql.Rows
+	var err error
+
+	// platform ID 0 should query all platforms
+	if platformID > 0 {
+		stmt += " AND platform_id=?"
+		rows, err = m.DB.Query(stmt, categoryID, platformID)
+	} else {
+		rows, err = m.DB.Query(stmt, categoryID)
+	}
+
 	if err != nil {
 		return nil, err
 	}

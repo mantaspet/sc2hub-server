@@ -30,6 +30,28 @@ func (app *application) getVideosByCategory(w http.ResponseWriter, r *http.Reque
 	app.json(w, res)
 }
 
+func (app *application) getEventBroadcasts(w http.ResponseWriter, r *http.Request) {
+	idParam := chi.URLParam(r, "id")
+	var date string
+	if r.URL.Query()["date"] != nil {
+		date = r.URL.Query()["date"][0]
+	}
+
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	res, err := app.videos.SelectEventBroadcasts(id, date)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	app.json(w, res)
+}
+
 func (app *application) getVideosByPlayer(w http.ResponseWriter, r *http.Request) {
 	idParam := chi.URLParam(r, "id")
 	var query string
@@ -53,7 +75,7 @@ func (app *application) getVideosByPlayer(w http.ResponseWriter, r *http.Request
 }
 
 func (app *application) queryVideoAPIs(w http.ResponseWriter, r *http.Request) {
-	channels, err := app.channels.SelectFromAllCategories()
+	channels, err := app.channels.SelectFromAllCategories(0)
 	if err != nil {
 		app.serverError(w, err)
 		return

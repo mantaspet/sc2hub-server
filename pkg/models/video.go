@@ -12,8 +12,9 @@ type Video struct {
 	PlatformID      int
 	ChannelID       string
 	Title           string
-	Duration        string
 	ThumbnailURL    string
+	Duration        string
+	Type            string
 	CreatedAt       time.Time
 }
 

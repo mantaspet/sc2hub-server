@@ -18,7 +18,14 @@ func (app *application) getChannelsByCategory(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	res, err := app.channels.SelectByCategory(id)
+	platformIDParam := r.URL.Query().Get("platform_id")
+	platformID, err := strconv.Atoi(platformIDParam)
+	if err != nil && platformIDParam != "" {
+		app.clientError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	res, err := app.channels.SelectByCategory(id, platformID)
 	if err != nil {
 		app.serverError(w, err)
 		return
