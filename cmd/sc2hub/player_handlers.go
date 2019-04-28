@@ -19,7 +19,7 @@ func (app *application) getAllPlayers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	players, err := app.players.SelectPage(from)
+	players, err := app.players.SelectPage(from, r.URL.Query().Get("query"))
 	if err != nil {
 		app.serverError(w, err)
 		return

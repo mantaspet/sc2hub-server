@@ -11,15 +11,30 @@ type PlayerModel struct {
 	DB *sql.DB
 }
 
-func (m *PlayerModel) SelectPage(fromID int) ([]*models.Player, error) {
+func (m *PlayerModel) SelectPage(fromID int, query string) ([]*models.Player, error) {
+	words := strings.Fields(query)
+	valueArgs := make([]interface{}, 0, len(words)*5+2)
 	stmt := `SELECT
 			id, player_id, name, race, team, country, total_earnings,
-       		COALESCE(date_of_birth, '') as date_of_birth, liquipedia_url, image_url, stream_url, is_retired
+       		COALESCE(date_of_birth, ''), liquipedia_url, image_url, stream_url, is_retired
 	  	FROM players
-		WHERE id>?
-	  	LIMIT ?`
+		WHERE id>?`
 
-	rows, err := m.DB.Query(stmt, fromID, models.PlayerPageLength+1)
+	valueArgs = append(valueArgs, fromID)
+	for _, w := range words {
+		stmt += ` AND (player_id LIKE ? OR name LIKE ? OR race LIKE ? OR team LIKE ? OR country LIKE ?)`
+		valueArgs = append(valueArgs, "%"+w+"%")
+		valueArgs = append(valueArgs, "%"+w+"%")
+		valueArgs = append(valueArgs, "%"+w+"%")
+		valueArgs = append(valueArgs, "%"+w+"%")
+		valueArgs = append(valueArgs, "%"+w+"%")
+	}
+	valueArgs = append(valueArgs, models.PlayerPageLength+1)
+	stmt += " LIMIT ?"
+
+	rows, err := m.DB.Query(stmt, valueArgs...)
+	fmt.Println(stmt)
+
 	if err != nil {
 		return nil, err
 	}
