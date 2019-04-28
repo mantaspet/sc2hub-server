@@ -27,7 +27,6 @@ type application struct {
 		Delete(id string) error
 		UpdatePriorities(id int, newPrio int) error
 		AssignToEvents(events []models.Event) ([]models.Event, error)
-		LoadOnEvents(events []*models.Event) ([]*models.Event, error)
 	}
 	players interface {
 		SelectPage(fromID int, query string) ([]*models.Player, error)

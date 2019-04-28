@@ -277,23 +277,3 @@ func (m *EventCategoryModel) AssignToEvents(events []models.Event) ([]models.Eve
 
 	return eventsWithCategories, nil
 }
-
-func (m *EventCategoryModel) LoadOnEvents(events []*models.Event) ([]*models.Event, error) {
-	eventCategories, err := m.SelectAll()
-	eventsWithCategories := make([]*models.Event, 0, len(events))
-	if err != nil {
-		return nil, err
-	}
-
-	for _, e := range events {
-		for _, ec := range eventCategories {
-			if e.EventCategoryID == ec.ID {
-				e.EventCategory = *ec
-				break
-			}
-		}
-		eventsWithCategories = append(eventsWithCategories, e)
-	}
-
-	return eventsWithCategories, nil
-}

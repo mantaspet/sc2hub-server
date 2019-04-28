@@ -39,12 +39,6 @@ func (app *application) getEvents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	events, err = app.eventCategories.LoadOnEvents(events)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-
 	app.json(w, events)
 }
 

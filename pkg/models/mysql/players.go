@@ -33,7 +33,6 @@ func (m *PlayerModel) SelectPage(fromID int, query string) ([]*models.Player, er
 	stmt += " LIMIT ?"
 
 	rows, err := m.DB.Query(stmt, valueArgs...)
-	fmt.Println(stmt)
 
 	if err != nil {
 		return nil, err

@@ -48,16 +48,12 @@ func (m *EventModel) SelectInDateRange(dateFrom string, dateTo string) ([]*model
 
 func (m *EventModel) SelectOne(id string) (*models.Event, error) {
 	stmt := `
-		SELECT events.id, COALESCE(events.event_category_id, 0) as event_category_id, events.title, events.stage, events.starts_at, events.info,
-		       event_categories.id, event_categories.name, event_categories.pattern, event_categories.info_url, event_categories.image_url, event_categories.description, event_categories.priority
+		SELECT id, COALESCE(events.event_category_id, 0), title, stage, starts_at, info
 		FROM events
-		INNER JOIN event_categories
-		ON events.event_category_id = event_categories.id
 		WHERE events.id=?`
 
 	e := &models.Event{}
-	err := m.DB.QueryRow(stmt, id).Scan(&e.ID, &e.EventCategoryID, &e.Title, &e.Stage, &e.StartsAt, &e.Info,
-		&e.EventCategory.ID, &e.EventCategory.Name, &e.EventCategory.Pattern, &e.EventCategory.InfoURL, &e.EventCategory.ImageURL, &e.EventCategory.Description, &e.EventCategory.Priority)
+	err := m.DB.QueryRow(stmt, id).Scan(&e.ID, &e.EventCategoryID, &e.Title, &e.Stage, &e.StartsAt, &e.Info)
 	if err == sql.ErrNoRows {
 		return nil, models.ErrNotFound
 	}

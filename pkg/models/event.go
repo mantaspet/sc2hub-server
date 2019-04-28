@@ -8,7 +8,6 @@ import (
 type Event struct {
 	ID              int
 	EventCategoryID int
-	EventCategory   EventCategory
 	TeamLiquidID    int
 	Title           string
 	Stage           string
@@ -16,45 +15,22 @@ type Event struct {
 	Info            string
 }
 
-// TODO find a more elegant solution
 func (e *Event) MarshalJSON() ([]byte, error) {
-	if e.EventCategoryID == 0 {
-		return json.Marshal(&struct {
-			ID              int
-			EventCategoryID interface{}
-			EventCategory   interface{}
-			Title           string
-			Stage           string
-			StartsAt        string
-			Info            string
-		}{
-			ID:              e.ID,
-			EventCategoryID: nil,
-			EventCategory:   nil,
-			Title:           e.Title,
-			Stage:           e.Stage,
-			StartsAt:        e.StartsAt,
-			Info:            e.Info,
-		})
-	} else {
-		return json.Marshal(&struct {
-			ID              int
-			EventCategoryID int
-			EventCategory   EventCategory
-			Title           string
-			Stage           string
-			StartsAt        string
-			Info            string
-		}{
-			ID:              e.ID,
-			EventCategoryID: e.EventCategoryID,
-			EventCategory:   e.EventCategory,
-			Title:           e.Title,
-			Stage:           e.Stage,
-			StartsAt:        e.StartsAt,
-			Info:            e.Info,
-		})
-	}
+	return json.Marshal(&struct {
+		ID              int
+		EventCategoryID int
+		Title           string
+		Stage           string
+		StartsAt        string
+		Info            string
+	}{
+		ID:              e.ID,
+		EventCategoryID: e.EventCategoryID,
+		Title:           e.Title,
+		Stage:           e.Stage,
+		StartsAt:        e.StartsAt,
+		Info:            e.Info,
+	})
 }
 
 func (e Event) String() string {

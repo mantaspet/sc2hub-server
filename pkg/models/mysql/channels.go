@@ -2,7 +2,6 @@ package mysql
 
 import (
 	"database/sql"
-	"fmt"
 	"github.com/mantaspet/sc2hub-server/pkg/models"
 )
 
@@ -133,7 +132,6 @@ func (m *ChannelModel) DeleteFromCategory(channelID string, categoryID int) erro
 	var count int64
 	stmt = `SELECT COUNT(*) FROM event_category_channels WHERE channel_id=?`
 	err = tx.QueryRow(stmt, channelID).Scan(&count)
-	fmt.Println(count)
 	if count > 0 {
 		return tx.Commit()
 	}
