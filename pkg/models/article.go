@@ -2,6 +2,8 @@ package models
 
 import "time"
 
+var ArticlePageLength = 24
+
 type Article struct {
 	ID           int
 	Title        string
@@ -10,4 +12,9 @@ type Article struct {
 	Excerpt      string
 	ThumbnailURL string
 	URL          string
+}
+
+type PaginatedArticles struct {
+	Items  []*Article
+	Cursor *time.Time
 }

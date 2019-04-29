@@ -11,6 +11,7 @@ func (app *application) router() chi.Router {
 	r.Use(middleware.Logger)
 
 	r.Route("/articles", func(r chi.Router) {
+		r.Get("/", app.getAllArticles)
 		r.Get("/crawl", app.crawlArticles)
 	})
 

@@ -18,7 +18,7 @@ func (m *PlayerModel) SelectPage(fromID int, query string) ([]*models.Player, er
 			id, player_id, name, race, team, country, total_earnings,
        		COALESCE(date_of_birth, ''), liquipedia_url, image_url, stream_url, is_retired
 	  	FROM players
-		WHERE id>?`
+		WHERE id>=?`
 
 	valueArgs = append(valueArgs, fromID)
 	for _, w := range words {

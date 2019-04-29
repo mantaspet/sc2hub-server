@@ -11,6 +11,52 @@ type ArticleModel struct {
 	DB *sql.DB
 }
 
+func (m *ArticleModel) SelectPage(fromDate string, query string) ([]*models.Article, error) {
+	words := strings.Fields(query)
+	valueArgs := make([]interface{}, 0, len(words)*2+2)
+	stmt := `SELECT
+			id, title, source, published_at, excerpt, thumbnail_url, url
+	  	FROM articles`
+
+	if fromDate == "" {
+		stmt += " WHERE 1<>?"
+	} else {
+		stmt += " WHERE published_at<=?"
+	}
+
+	valueArgs = append(valueArgs, fromDate)
+	for _, w := range words {
+		stmt += ` AND (title LIKE ? OR source LIKE ?)`
+		valueArgs = append(valueArgs, "%"+w+"%")
+		valueArgs = append(valueArgs, "%"+w+"%")
+	}
+	valueArgs = append(valueArgs, models.ArticlePageLength+1)
+	stmt += " ORDER BY published_at DESC LIMIT ?"
+
+	rows, err := m.DB.Query(stmt, valueArgs...)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	articles := []*models.Article{}
+	for rows.Next() {
+		a := &models.Article{}
+		err := rows.Scan(&a.ID, &a.Title, &a.Source, &a.PublishedAt, &a.Excerpt, &a.ThumbnailURL, &a.URL)
+		if err != nil {
+			return nil, err
+		}
+		articles = append(articles, a)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	return articles, nil
+}
+
 func (m *ArticleModel) SelectLastInserted(amount int64) ([]*models.Article, error) {
 	stmt := `
 		SELECT id, title, excerpt

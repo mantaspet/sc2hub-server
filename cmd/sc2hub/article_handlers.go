@@ -11,6 +11,30 @@ import (
 	"time"
 )
 
+func (app *application) getAllArticles(w http.ResponseWriter, r *http.Request) {
+	articles, err := app.articles.SelectPage(r.URL.Query().Get("from"), r.URL.Query().Get("query"))
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	var res models.PaginatedArticles
+	itemCount := len(articles)
+	if itemCount < models.ArticlePageLength {
+		res = models.PaginatedArticles{
+			Cursor: nil,
+			Items:  articles,
+		}
+	} else {
+		res = models.PaginatedArticles{
+			Cursor: &articles[itemCount-1].PublishedAt,
+			Items:  articles[:itemCount-1],
+		}
+	}
+
+	app.json(w, res)
+}
+
 func (app *application) getArticlesByCategory(w http.ResponseWriter, r *http.Request) {
 	idParam := chi.URLParam(r, "id")
 	id, err := strconv.Atoi(idParam)
