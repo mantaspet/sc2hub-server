@@ -58,7 +58,7 @@ func (m *PlayerModel) SelectPage(fromID int, query string) ([]*models.Player, er
 
 func (m *PlayerModel) SelectOne(id int) (*models.Player, error) {
 	stmt := `
-		SELECT id, player_id, name, race, team, country, total_earnings,
+		SELECT id, player_id, name, race, team, country, total_earnings, COALESCE(date_of_birth, ''),
        		COALESCE(liquipedia_url, ''), COALESCE(image_url, ''), COALESCE(stream_url, ''), is_retired
 		FROM players
 		WHERE id=?`

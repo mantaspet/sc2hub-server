@@ -149,12 +149,13 @@ func (m *VideoModel) InsertOrUpdateMany(videos []*models.Video) (int64, error) {
 	}
 
 	stmt := fmt.Sprintf(`
-		INSERT INTO videos(id, event_category_id, platform_id, channel_id, title, duration, thumbnail_url, type,
-			created_at)
+		INSERT INTO videos(id, event_category_id, platform_id, channel_id, title, duration, thumbnail_url, type, created_at)
 		VALUES %s 
-		ON DUPLICATE KEY UPDATE title=VALUES(title), duration=VALUES(duration), thumbnail_url=VALUES(thumbnail_url),
-			created_at=VALUES(created_at);`,
-		strings.Join(valueStrings, ","))
+		ON DUPLICATE KEY UPDATE
+			title=VALUES(title),
+			duration=VALUES(duration),
+			thumbnail_url=VALUES(thumbnail_url),
+			created_at=VALUES(created_at);`, strings.Join(valueStrings, ","))
 
 	res, err := m.DB.Exec(stmt, valueArgs...)
 	if err != nil {
