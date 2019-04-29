@@ -9,15 +9,14 @@ var VideoPageLength = 24
 
 type Video struct {
 	ID              string
-	EventID         int
 	EventCategoryID int
 	PlatformID      int
 	ChannelID       string
 	Title           string
-	ThumbnailURL    string
 	Duration        string
-	Type            string
+	ThumbnailURL    string
 	CreatedAt       time.Time
+	Type            string
 }
 
 type PaginatedVideos struct {

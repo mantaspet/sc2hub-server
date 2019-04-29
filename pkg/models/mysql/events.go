@@ -12,7 +12,7 @@ type EventModel struct {
 }
 
 func (m *EventModel) SelectInDateRange(dateFrom string, dateTo string) ([]*models.Event, error) {
-	stmt := `SELECT id, COALESCE(event_category_id, 0), title, stage, starts_at, COALESCE(info, '')
+	stmt := `SELECT id, COALESCE(event_category_id, 0), title, stage, starts_at
 	  	FROM events
 	  	WHERE starts_at BETWEEN ? AND ?
 		ORDER BY starts_at`
@@ -26,7 +26,7 @@ func (m *EventModel) SelectInDateRange(dateFrom string, dateTo string) ([]*model
 	events := []*models.Event{}
 	for rows.Next() {
 		e := &models.Event{}
-		err := rows.Scan(&e.ID, &e.EventCategoryID, &e.Title, &e.Stage, &e.StartsAt, &e.Info)
+		err := rows.Scan(&e.ID, &e.EventCategoryID, &e.Title, &e.Stage, &e.StartsAt)
 		if err != nil {
 			return nil, err
 		}
@@ -42,12 +42,12 @@ func (m *EventModel) SelectInDateRange(dateFrom string, dateTo string) ([]*model
 
 func (m *EventModel) SelectOne(id string) (*models.Event, error) {
 	stmt := `
-		SELECT id, COALESCE(events.event_category_id, 0), title, stage, starts_at, COALESCE(info, '')
+		SELECT id, COALESCE(events.event_category_id, 0), title, stage, starts_at
 		FROM events
 		WHERE events.id=?`
 
 	e := &models.Event{}
-	err := m.DB.QueryRow(stmt, id).Scan(&e.ID, &e.EventCategoryID, &e.Title, &e.Stage, &e.StartsAt, &e.Info)
+	err := m.DB.QueryRow(stmt, id).Scan(&e.ID, &e.EventCategoryID, &e.Title, &e.Stage, &e.StartsAt)
 	if err == sql.ErrNoRows {
 		return nil, models.ErrNotFound
 	}
