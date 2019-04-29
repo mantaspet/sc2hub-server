@@ -45,6 +45,28 @@ func (m *VideoModel) SelectPage(fromDate string, query string) ([]*models.Video,
 	return videos, nil
 }
 
+func (m *VideoModel) SelectRecent() ([]*models.Video, error) {
+	stmt := `SELECT id, COALESCE(event_category_id, 0), platform_id, COALESCE(channel_id, ''), title, duration,
+			thumbnail_url, created_at
+	  	FROM videos
+	  	ORDER BY created_at DESC 
+	  	LIMIT 16`
+
+	rows, err := m.DB.Query(stmt)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	videos, err := parseVideoRows(rows)
+	if err != nil {
+		return nil, err
+	}
+
+	return videos, nil
+}
+
 func (m *VideoModel) SelectEventBroadcasts(categoryID int, date string) ([]*models.Video, error) {
 	stmt := `SELECT
 			id,

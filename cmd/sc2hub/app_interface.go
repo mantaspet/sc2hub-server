@@ -40,6 +40,7 @@ type application struct {
 	}
 	videos interface {
 		SelectPage(fromDate string, query string) ([]*models.Video, error)
+		SelectRecent() ([]*models.Video, error)
 		SelectEventBroadcasts(categoryID int, date string) ([]*models.Video, error)
 		SelectByCategory(categoryID int, query string) ([]*models.Video, error)
 		SelectByPlayer(playerID int, query string) ([]*models.Video, error)

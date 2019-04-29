@@ -9,7 +9,15 @@ import (
 )
 
 func (app *application) getAllVideos(w http.ResponseWriter, r *http.Request) {
-	videos, err := app.videos.SelectPage(r.URL.Query().Get("from"), r.URL.Query().Get("query"))
+	var videos []*models.Video
+	var err error
+
+	if r.URL.Query().Get("recent") != "" {
+		videos, err = app.videos.SelectRecent()
+	} else {
+		videos, err = app.videos.SelectPage(r.URL.Query().Get("from"), r.URL.Query().Get("query"))
+	}
+
 	if err != nil {
 		app.serverError(w, err)
 		return
