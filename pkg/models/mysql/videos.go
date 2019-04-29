@@ -134,7 +134,7 @@ func (m *VideoModel) SelectByPlayer(playerID int, query string) ([]*models.Video
 
 func (m *VideoModel) InsertOrUpdateMany(videos []*models.Video) (int64, error) {
 	valueStrings := make([]string, 0, len(videos))
-	valueArgs := make([]interface{}, 0, len(videos)*8)
+	valueArgs := make([]interface{}, 0, len(videos)*9)
 	for _, v := range videos {
 		valueStrings = append(valueStrings, "(?, ?, ?, ?, ?, ?, ?, ?, ?)")
 		valueArgs = append(valueArgs, v.ID)
@@ -152,10 +152,7 @@ func (m *VideoModel) InsertOrUpdateMany(videos []*models.Video) (int64, error) {
 		INSERT INTO videos(id, event_category_id, platform_id, channel_id, title, duration, thumbnail_url, type,
 			created_at)
 		VALUES %s 
-		ON DUPLICATE KEY UPDATE
-			title=VALUES(title),
-			duration=VALUES(duration),
-			thumbnail_url=VALUES(thumbnail_url),
+		ON DUPLICATE KEY UPDATE title=VALUES(title), duration=VALUES(duration), thumbnail_url=VALUES(thumbnail_url),
 			created_at=VALUES(created_at);`,
 		strings.Join(valueStrings, ","))
 
