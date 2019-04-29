@@ -16,6 +16,11 @@ type EventCategory struct {
 	Priority    int
 }
 
+type EventCategoryArticle struct {
+	EventCategoryID int
+	ArticleID       int
+}
+
 func (ec *EventCategory) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
 		ID          int

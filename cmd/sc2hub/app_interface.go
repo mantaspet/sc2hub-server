@@ -21,12 +21,14 @@ type application struct {
 	}
 	eventCategories interface {
 		SelectAll() ([]*models.EventCategory, error)
+		SelectAllPatterns() ([]*models.EventCategory, error)
 		SelectOne(id string) (*models.EventCategory, error)
 		Insert(ec models.EventCategory) (*models.EventCategory, error)
 		Update(id string, ec models.EventCategory) (*models.EventCategory, error)
 		Delete(id string) error
 		UpdatePriorities(id int, newPrio int) error
 		AssignToEvents(events []models.Event) ([]models.Event, error)
+		InsertEventCategoryArticles(ecArticles []models.EventCategoryArticle) (int64, error)
 	}
 	players interface {
 		SelectPage(fromID int, query string) ([]*models.Player, error)
@@ -34,6 +36,7 @@ type application struct {
 		SelectAllPlayerIDs() ([]*models.Player, error)
 		InsertMany(players []models.Player) (int64, error)
 		InsertPlayerVideos(playerVideos []models.PlayerVideo) (int64, error)
+		InsertPlayerArticles(playerArticles []models.PlayerArticle) (int64, error)
 	}
 	videos interface {
 		SelectEventBroadcasts(categoryID int, date string) ([]*models.Video, error)
@@ -43,6 +46,8 @@ type application struct {
 	}
 	articles interface {
 		SelectByCategory(categoryID int) ([]models.Article, error)
+		SelectLastInserted(amount int64) ([]*models.Article, error)
+		InsertMany(articles []models.Article) (int64, error)
 	}
 	channels interface {
 		SelectFromAllCategories(platformID int) ([]*models.Channel, error)

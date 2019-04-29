@@ -26,3 +26,8 @@ type PlayerVideo struct {
 	PlayerID int
 	VideoID  string
 }
+
+type PlayerArticle struct {
+	PlayerID  int
+	ArticleID int
+}

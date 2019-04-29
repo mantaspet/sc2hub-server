@@ -166,3 +166,29 @@ func (m *PlayerModel) InsertPlayerVideos(playerVideos []models.PlayerVideo) (int
 
 	return rowCnt, nil
 }
+
+func (m *PlayerModel) InsertPlayerArticles(playerArticles []models.PlayerArticle) (int64, error) {
+	valueStrings := make([]string, 0, len(playerArticles))
+	valueArgs := make([]interface{}, 0, len(playerArticles)*2)
+	for _, pa := range playerArticles {
+		valueStrings = append(valueStrings, "(?, ?)")
+		valueArgs = append(valueArgs, pa.PlayerID)
+		valueArgs = append(valueArgs, pa.ArticleID)
+	}
+
+	stmt := fmt.Sprintf(`
+		INSERT INTO player_articles(player_id, article_id)
+		VALUES %s
+		ON DUPLICATE KEY UPDATE player_id=VALUES(player_id)`, strings.Join(valueStrings, ","))
+
+	res, err := m.DB.Exec(stmt, valueArgs...)
+	if err != nil {
+		return 0, err
+	}
+	rowCnt, err := res.RowsAffected()
+	if err != nil {
+		return rowCnt, err
+	}
+
+	return rowCnt, nil
+}

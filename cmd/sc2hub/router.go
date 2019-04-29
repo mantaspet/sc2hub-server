@@ -10,6 +10,10 @@ func (app *application) router() chi.Router {
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Logger)
 
+	r.Route("/articles", func(r chi.Router) {
+		r.Get("/crawl", app.crawlArticles)
+	})
+
 	r.Route("/events", func(r chi.Router) {
 		r.Get("/", app.getEvents)
 		r.Get("/{id}", app.getEvent)
