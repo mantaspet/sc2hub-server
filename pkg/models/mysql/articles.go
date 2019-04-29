@@ -15,7 +15,7 @@ func (m *ArticleModel) SelectPage(fromDate string, query string) ([]*models.Arti
 	words := strings.Fields(query)
 	valueArgs := make([]interface{}, 0, len(words)*2+2)
 	stmt := `SELECT
-			id, title, source, published_at, excerpt, thumbnail_url, url
+			id, title, source, published_at, COALESCE(excerpt, ''), thumbnail_url, url
 	  	FROM articles`
 
 	if fromDate == "" {
@@ -58,7 +58,7 @@ func (m *ArticleModel) SelectPage(fromDate string, query string) ([]*models.Arti
 }
 
 func (m *ArticleModel) SelectRecent() ([]*models.Article, error) {
-	stmt := `SELECT id, title, source, published_at, excerpt, thumbnail_url, url
+	stmt := `SELECT id, title, source, published_at, COALESCE(excerpt, ''), thumbnail_url, url
 	  	FROM articles
 	  	ORDER BY published_at DESC
 	  	LIMIT 10`
@@ -89,7 +89,7 @@ func (m *ArticleModel) SelectRecent() ([]*models.Article, error) {
 
 func (m *ArticleModel) SelectLastInserted(amount int64) ([]*models.Article, error) {
 	stmt := `
-		SELECT id, title, excerpt
+		SELECT id, title, COALESCE(excerpt, '')
 		FROM articles
 		ORDER BY id DESC
 		LIMIT ?`
