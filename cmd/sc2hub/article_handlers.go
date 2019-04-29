@@ -12,7 +12,13 @@ import (
 )
 
 func (app *application) getAllArticles(w http.ResponseWriter, r *http.Request) {
-	articles, err := app.articles.SelectPage(r.URL.Query().Get("from"), r.URL.Query().Get("query"))
+	var articles []*models.Article
+	var err error
+	if r.URL.Query().Get("recent") != "" {
+		articles, err = app.articles.SelectRecent()
+	} else {
+		articles, err = app.articles.SelectPage(r.URL.Query().Get("from"), r.URL.Query().Get("query"))
+	}
 	if err != nil {
 		app.serverError(w, err)
 		return

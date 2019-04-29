@@ -46,6 +46,7 @@ type application struct {
 		InsertOrUpdateMany(videos []*models.Video) (int64, error)
 	}
 	articles interface {
+		SelectRecent() ([]*models.Article, error)
 		SelectPage(fromDate string, query string) ([]*models.Article, error)
 		SelectByCategory(categoryID int) ([]models.Article, error)
 		SelectLastInserted(amount int64) ([]*models.Article, error)
@@ -53,6 +54,7 @@ type application struct {
 	}
 	channels interface {
 		SelectFromAllCategories(platformID int) ([]*models.Channel, error)
+		SelectAllFromTwitch() ([]*models.Channel, error)
 		SelectByCategory(categoryID int, platformID int) ([]*models.Channel, error)
 		Insert(channel models.Channel, categoryID int) (*models.Channel, error)
 		DeleteFromCategory(channelID string, categoryID int) error

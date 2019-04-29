@@ -15,6 +15,10 @@ func (app *application) router() chi.Router {
 		r.Get("/crawl", app.crawlArticles)
 	})
 
+	r.Route("/channels", func(r chi.Router) {
+		r.Get("/twitch", app.getAllTwitchChannels)
+	})
+
 	r.Route("/events", func(r chi.Router) {
 		r.Get("/", app.getEvents)
 		r.Get("/{id}", app.getEvent)

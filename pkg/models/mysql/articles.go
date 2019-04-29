@@ -57,6 +57,36 @@ func (m *ArticleModel) SelectPage(fromDate string, query string) ([]*models.Arti
 	return articles, nil
 }
 
+func (m *ArticleModel) SelectRecent() ([]*models.Article, error) {
+	stmt := `SELECT id, title, source, published_at, excerpt, thumbnail_url, url
+	  	FROM articles
+	  	ORDER BY published_at DESC
+	  	LIMIT 10`
+
+	rows, err := m.DB.Query(stmt)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	articles := []*models.Article{}
+	for rows.Next() {
+		a := &models.Article{}
+		err := rows.Scan(&a.ID, &a.Title, &a.Source, &a.PublishedAt, &a.Excerpt, &a.ThumbnailURL, &a.URL)
+		if err != nil {
+			return nil, err
+		}
+		articles = append(articles, a)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	return articles, nil
+}
+
 func (m *ArticleModel) SelectLastInserted(amount int64) ([]*models.Article, error) {
 	stmt := `
 		SELECT id, title, excerpt

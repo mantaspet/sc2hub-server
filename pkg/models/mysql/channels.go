@@ -9,6 +9,34 @@ type ChannelModel struct {
 	DB *sql.DB
 }
 
+func (m *ChannelModel) SelectAllFromTwitch() ([]*models.Channel, error) {
+	stmt := `
+		SELECT id, login, platform_id
+		FROM channels
+		WHERE platform_id=1`
+
+	rows, err := m.DB.Query(stmt)
+	if err != nil {
+		return nil, err
+	}
+
+	channels := []*models.Channel{}
+	for rows.Next() {
+		channel := &models.Channel{}
+		err := rows.Scan(&channel.ID, &channel.Login, &channel.PlatformID)
+		if err != nil {
+			return nil, err
+		}
+		channels = append(channels, channel)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	return channels, nil
+}
+
 func (m *ChannelModel) SelectFromAllCategories(platformID int) ([]*models.Channel, error) {
 	stmt := `
 		SELECT channels.id, channels.platform_id, event_categories.id, event_categories.pattern
@@ -18,14 +46,17 @@ func (m *ChannelModel) SelectFromAllCategories(platformID int) ([]*models.Channe
 		INNER JOIN event_categories
 		ON event_category_channels.event_category_id = event_categories.id`
 
-	var rows *sql.Rows
-	var err error
-	// platform ID 0 should query all platforms
 	if platformID > 0 {
-		stmt += " AND platform_id=?"
-		rows, err = m.DB.Query(stmt, platformID)
+		stmt += " WHERE platform_id=?"
 	} else {
-		rows, err = m.DB.Query(stmt)
+		stmt += " WHERE -1<>?"
+	}
+
+	stmt += ` ORDER BY event_categories.priority`
+
+	rows, err := m.DB.Query(stmt, platformID)
+	if err != nil {
+		return nil, err
 	}
 
 	channels := []*models.Channel{}

@@ -34,6 +34,16 @@ func (app *application) getChannelsByCategory(w http.ResponseWriter, r *http.Req
 	app.json(w, res)
 }
 
+func (app *application) getAllTwitchChannels(w http.ResponseWriter, r *http.Request) {
+	res, err := app.channels.SelectAllFromTwitch()
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	app.json(w, res)
+}
+
 // checks if URL points to a valid twitch or youtube channel,
 // fetches it's data from twitch or youtube api,
 // stores it inside our database
