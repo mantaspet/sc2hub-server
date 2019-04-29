@@ -1,13 +1,20 @@
 package models
 
+import "time"
+
+var ArticlePageLength = 24
+
 type Article struct {
-	ID              int
-	EventID         int
-	EventCategoryID int
-	SourceID        int
-	Title           string
-	Author          string
-	PublishedAt     string
-	Excerpt         string
-	URL             string
+	ID           int
+	Title        string
+	Source       string
+	PublishedAt  time.Time
+	Excerpt      string
+	ThumbnailURL string
+	URL          string
+}
+
+type PaginatedArticles struct {
+	Items  []*Article
+	Cursor *time.Time
 }

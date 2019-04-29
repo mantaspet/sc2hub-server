@@ -10,7 +10,7 @@ import (
 func (app *application) serverError(w http.ResponseWriter, err error) {
 	app.logTrace(err)
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+	http.Error(w, err.Error(), http.StatusInternalServerError)
 }
 
 func (app *application) clientError(w http.ResponseWriter, status int, err error) {

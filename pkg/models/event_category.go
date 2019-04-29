@@ -16,6 +16,11 @@ type EventCategory struct {
 	Priority    int
 }
 
+type EventCategoryArticle struct {
+	EventCategoryID int
+	ArticleID       int
+}
+
 func (ec *EventCategory) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
 		ID          int
@@ -33,6 +38,7 @@ func (ec *EventCategory) MarshalJSON() ([]byte, error) {
 		Description: ec.Description,
 	})
 }
+
 func (ec EventCategory) Validate(db *sql.DB) map[string]string {
 	errors := make(map[string]string)
 	validators.SetError(errors, "Name",

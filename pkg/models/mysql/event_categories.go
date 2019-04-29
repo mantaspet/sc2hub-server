@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/mantaspet/sc2hub-server/pkg/models"
 	"strings"
 )
@@ -12,18 +13,9 @@ type EventCategoryModel struct {
 
 func (m *EventCategoryModel) SelectAll() ([]*models.EventCategory, error) {
 	stmt := `
-		SELECT
-			id,
-		    name,
-		    pattern,
-		    info_url,
-		    image_url,
-		    description,
-		    priority
-		FROM
-		    event_categories
-		ORDER BY
-		    priority`
+		SELECT id, name, pattern, info_url, image_url, description, priority
+		FROM event_categories
+		ORDER BY priority`
 
 	rows, err := m.DB.Query(stmt)
 	if err != nil {
@@ -35,6 +27,35 @@ func (m *EventCategoryModel) SelectAll() ([]*models.EventCategory, error) {
 	for rows.Next() {
 		ec := &models.EventCategory{}
 		err := rows.Scan(&ec.ID, &ec.Name, &ec.Pattern, &ec.InfoURL, &ec.ImageURL, &ec.Description, &ec.Priority)
+		if err != nil {
+			return nil, err
+		}
+		eventCategories = append(eventCategories, ec)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	return eventCategories, nil
+}
+
+func (m *EventCategoryModel) SelectAllPatterns() ([]*models.EventCategory, error) {
+	stmt := `
+		SELECT id, pattern
+		FROM event_categories
+		ORDER BY priority`
+
+	rows, err := m.DB.Query(stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	eventCategories := []*models.EventCategory{}
+	for rows.Next() {
+		ec := &models.EventCategory{}
+		err := rows.Scan(&ec.ID, &ec.Pattern)
 		if err != nil {
 			return nil, err
 		}
@@ -258,8 +279,8 @@ func (m *EventCategoryModel) UpdatePriorities(id int, newPrio int) error {
 	return err
 }
 
-func (m *EventCategoryModel) AssignToEvents(events []*models.Event) ([]*models.Event, error) {
-	eventsWithCategories := make([]*models.Event, 0, len(events))
+func (m *EventCategoryModel) AssignToEvents(events []models.Event) ([]models.Event, error) {
+	eventsWithCategories := make([]models.Event, 0, len(events))
 	eventCategories, err := m.SelectAll()
 	if err != nil {
 		return nil, err
@@ -278,22 +299,28 @@ func (m *EventCategoryModel) AssignToEvents(events []*models.Event) ([]*models.E
 	return eventsWithCategories, nil
 }
 
-func (m *EventCategoryModel) LoadOnEvents(events []*models.Event) ([]*models.Event, error) {
-	eventCategories, err := m.SelectAll()
-	eventsWithCategories := make([]*models.Event, 0, len(events))
+func (m *EventCategoryModel) InsertEventCategoryArticles(ecArticles []models.EventCategoryArticle) (int64, error) {
+	valueStrings := make([]string, 0, len(ecArticles))
+	valueArgs := make([]interface{}, 0, len(ecArticles)*2)
+	for _, eca := range ecArticles {
+		valueStrings = append(valueStrings, "(?, ?)")
+		valueArgs = append(valueArgs, eca.EventCategoryID)
+		valueArgs = append(valueArgs, eca.ArticleID)
+	}
+
+	stmt := fmt.Sprintf(`
+		INSERT INTO event_category_articles(event_category_id, article_id)
+		VALUES %s
+		ON DUPLICATE KEY UPDATE event_category_id=VALUES(event_category_id)`, strings.Join(valueStrings, ","))
+
+	res, err := m.DB.Exec(stmt, valueArgs...)
 	if err != nil {
-		return nil, err
+		return 0, err
+	}
+	rowCnt, err := res.RowsAffected()
+	if err != nil {
+		return rowCnt, err
 	}
 
-	for _, e := range events {
-		for _, ec := range eventCategories {
-			if e.EventCategoryID == ec.ID {
-				e.EventCategory = *ec
-				break
-			}
-		}
-		eventsWithCategories = append(eventsWithCategories, e)
-	}
-
-	return eventsWithCategories, nil
+	return rowCnt, nil
 }
