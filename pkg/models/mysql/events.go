@@ -12,13 +12,7 @@ type EventModel struct {
 }
 
 func (m *EventModel) SelectInDateRange(dateFrom string, dateTo string) ([]*models.Event, error) {
-	stmt := `SELECT
-			id,
-			COALESCE(event_category_id, 0) as event_category_id,
-			title,
-			stage,
-			starts_at,
-			info
+	stmt := `SELECT id, COALESCE(event_category_id, 0), title, stage, starts_at, COALESCE(info, '')
 	  	FROM events
 	  	WHERE starts_at BETWEEN ? AND ?
 		ORDER BY starts_at`
@@ -48,7 +42,7 @@ func (m *EventModel) SelectInDateRange(dateFrom string, dateTo string) ([]*model
 
 func (m *EventModel) SelectOne(id string) (*models.Event, error) {
 	stmt := `
-		SELECT id, COALESCE(events.event_category_id, 0), title, stage, starts_at, info
+		SELECT id, COALESCE(events.event_category_id, 0), title, stage, starts_at, COALESCE(info, '')
 		FROM events
 		WHERE events.id=?`
 

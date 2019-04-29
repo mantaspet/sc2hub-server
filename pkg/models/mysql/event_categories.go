@@ -13,7 +13,7 @@ type EventCategoryModel struct {
 
 func (m *EventCategoryModel) SelectAll() ([]*models.EventCategory, error) {
 	stmt := `
-		SELECT id, name, pattern, info_url, image_url, description, priority
+		SELECT id, name, pattern, COALESCE(info_url, ''), COALESCE(image_url, ''), COALESCE(description, ''), priority
 		FROM event_categories
 		ORDER BY priority`
 
@@ -71,12 +71,13 @@ func (m *EventCategoryModel) SelectAllPatterns() ([]*models.EventCategory, error
 
 func (m *EventCategoryModel) SelectOne(id string) (*models.EventCategory, error) {
 	stmt := `
-		SELECT id, name, pattern, info_url, image_url, description, priority
+		SELECT id, name, pattern, COALESCE(info_url, ''), COALESCE(image_url, ''), COALESCE(description, ''), priority
 		FROM event_categories
 		WHERE id=?`
 
 	ec := &models.EventCategory{}
-	err := m.DB.QueryRow(stmt, id).Scan(&ec.ID, &ec.Name, &ec.Pattern, &ec.InfoURL, &ec.ImageURL, &ec.Description, &ec.Priority)
+	err := m.DB.QueryRow(stmt, id).Scan(&ec.ID, &ec.Name, &ec.Pattern, &ec.InfoURL, &ec.ImageURL, &ec.Description,
+		&ec.Priority)
 	if err == sql.ErrNoRows {
 		return nil, models.ErrNotFound
 	}
@@ -89,24 +90,13 @@ func (m *EventCategoryModel) SelectOne(id string) (*models.EventCategory, error)
 
 func (m *EventCategoryModel) Insert(ec models.EventCategory) (*models.EventCategory, error) {
 	insertStmt := `
-		INSERT INTO
-		  	event_categories (name, pattern, info_url, image_url, description, priority)
-		VALUES
-		    (?, ?, ?, ?, ?, ?)`
+		INSERT INTO event_categories (name, pattern, info_url, image_url, description, priority)
+		VALUES (?, ?, ?, ?, ?, ?)`
 
 	selectStmt := `
-		SELECT
-			id,
-		    name,
-		    pattern,
-		    COALESCE(info_url, '') as info_url,
-		    COALESCE(image_url, '') as image_url,
-		    COALESCE(description, '') as description,
-		    priority
-		FROM
-		    event_categories
-		WHERE
-		    id=?`
+		SELECT id, name, pattern, COALESCE(info_url, ''), COALESCE(image_url, ''), COALESCE(description, ''), priority
+		FROM event_categories
+		WHERE id=?`
 
 	maxPrioStmt := `SELECT COALESCE(MAX(priority), 1) FROM event_categories`
 
@@ -136,30 +126,14 @@ func (m *EventCategoryModel) Insert(ec models.EventCategory) (*models.EventCateg
 
 func (m *EventCategoryModel) Update(id string, ec models.EventCategory) (*models.EventCategory, error) {
 	updateStmt := `
-		UPDATE
-		  	event_categories
-		SET
-		    name=?,
-		    pattern=?,
-		    info_url=?,
-		    image_url=?,
-		    description=?
-		WHERE
-		    id=?`
+		UPDATE event_categories
+		SET name=?, pattern=?, info_url=?, image_url=?, description=?
+		WHERE id=?`
 
 	selectStmt := `
-		SELECT
-		    id,
-		    name,
-		    pattern,
-		    COALESCE(info_url, '') as info_url,
-		    COALESCE(image_url, '') as image_url,
-		    COALESCE(description, '') as description,
-		    priority
-		FROM
-		    event_categories
-		WHERE
-		    id=?`
+		SELECT id, name, pattern, COALESCE(info_url, ''), COALESCE(image_url, ''), COALESCE(description, ''), priority
+		FROM event_categories
+		WHERE id=?`
 
 	updateRes, err := m.DB.Exec(updateStmt, ec.Name, ec.Pattern, ec.InfoURL, ec.ImageURL, ec.Description, id)
 	if err != nil {
@@ -171,7 +145,8 @@ func (m *EventCategoryModel) Update(id string, ec models.EventCategory) (*models
 	}
 
 	res := &models.EventCategory{}
-	err = m.DB.QueryRow(selectStmt, id).Scan(&res.ID, &res.Name, &res.Pattern, &res.InfoURL, &res.ImageURL, &res.Description, &res.Priority)
+	err = m.DB.QueryRow(selectStmt, id).Scan(&res.ID, &res.Name, &res.Pattern, &res.InfoURL, &res.ImageURL,
+		&res.Description, &res.Priority)
 	if err != nil {
 		return nil, err
 	}

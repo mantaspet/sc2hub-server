@@ -78,7 +78,8 @@ func (m *ChannelModel) SelectFromAllCategories(platformID int) ([]*models.Channe
 
 func (m *ChannelModel) SelectByCategory(categoryID int, platformID int) ([]*models.Channel, error) {
 	stmt := `
-		SELECT channels.id, channels.platform_id, channels.login, channels.title, channels.profile_image_url
+		SELECT channels.id, channels.platform_id, channels.login, channels.title,
+		       COALESCE(channels.profile_image_url, '')
 		FROM channels
 		INNER JOIN event_category_channels
 		ON event_category_channels.channel_id=channels.id
@@ -140,7 +141,7 @@ func (m *ChannelModel) Insert(channel models.Channel, categoryID int) (*models.C
 	}
 
 	selectStmt := `
-		SELECT id, platform_id, login, title, profile_image_url
+		SELECT id, platform_id, login, title, COALESCE(profile_image_url, '')
 		FROM channels
 		WHERE id=?`
 

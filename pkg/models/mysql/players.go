@@ -14,10 +14,9 @@ type PlayerModel struct {
 func (m *PlayerModel) SelectPage(fromID int, query string) ([]*models.Player, error) {
 	words := strings.Fields(query)
 	valueArgs := make([]interface{}, 0, len(words)*5+2)
-	stmt := `SELECT
-			id, player_id, name, race, team, country, total_earnings,
-       		COALESCE(date_of_birth, ''), liquipedia_url, image_url, stream_url, is_retired
-	  	FROM players
+	stmt := `SELECT id, player_id, name, race, team, country, total_earnings, COALESCE(date_of_birth, ''),
+       	COALESCE(liquipedia_url, ''), COALESCE(image_url, ''), COALESCE(stream_url, ''), is_retired
+		FROM players
 		WHERE id>=?`
 
 	valueArgs = append(valueArgs, fromID)
@@ -60,7 +59,7 @@ func (m *PlayerModel) SelectPage(fromID int, query string) ([]*models.Player, er
 func (m *PlayerModel) SelectOne(id int) (*models.Player, error) {
 	stmt := `
 		SELECT id, player_id, name, race, team, country, total_earnings,
-       		COALESCE(date_of_birth, ''), liquipedia_url, image_url, stream_url, is_retired
+       		COALESCE(liquipedia_url, ''), COALESCE(image_url, ''), COALESCE(stream_url, ''), is_retired
 		FROM players
 		WHERE id=?`
 

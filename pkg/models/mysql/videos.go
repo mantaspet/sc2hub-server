@@ -47,7 +47,7 @@ func (m *VideoModel) SelectPage(fromDate string, query string) ([]*models.Video,
 
 func (m *VideoModel) SelectRecent() ([]*models.Video, error) {
 	stmt := `SELECT id, COALESCE(event_category_id, 0), platform_id, COALESCE(channel_id, ''), title, duration,
-			thumbnail_url, created_at
+			COALESCE(thumbnail_url, ''), created_at
 	  	FROM videos
 	  	ORDER BY created_at DESC 
 	  	LIMIT 16`
@@ -68,15 +68,8 @@ func (m *VideoModel) SelectRecent() ([]*models.Video, error) {
 }
 
 func (m *VideoModel) SelectEventBroadcasts(categoryID int, date string) ([]*models.Video, error) {
-	stmt := `SELECT
-			id,
-			COALESCE(event_category_id, 0),
-			platform_id,
-			COALESCE(channel_id, ''),
-			title,
-			duration,
-			thumbnail_url,
-			created_at
+	stmt := `SELECT id, COALESCE(event_category_id, 0), platform_id, COALESCE(channel_id, ''), title, duration,
+			COALESCE(thumbnail_url, ''), created_at
 	  	FROM videos
 	  	WHERE event_category_id=? AND created_at LIKE ? AND type='archive'
 		ORDER BY created_at DESC`
@@ -96,15 +89,8 @@ func (m *VideoModel) SelectEventBroadcasts(categoryID int, date string) ([]*mode
 }
 
 func (m *VideoModel) SelectByCategory(categoryID int, query string) ([]*models.Video, error) {
-	stmt := `SELECT
-			id,
-			COALESCE(event_category_id, 0),
-			platform_id,
-			COALESCE(channel_id, ''),
-			title,
-			duration,
-			thumbnail_url,
-			created_at
+	stmt := `SELECT id, COALESCE(event_category_id, 0), platform_id, COALESCE(channel_id, ''), title, duration,
+			COALESCE(thumbnail_url, ''), created_at
 	  	FROM videos
 	  	WHERE event_category_id=? AND title LIKE ?
 		ORDER BY created_at DESC`
@@ -125,15 +111,8 @@ func (m *VideoModel) SelectByCategory(categoryID int, query string) ([]*models.V
 
 func (m *VideoModel) SelectByPlayer(playerID int, query string) ([]*models.Video, error) {
 	stmt := `
-		SELECT
-			videos.id,
-			COALESCE(videos.event_category_id, 0),
-			videos.platform_id,
-			COALESCE(videos.channel_id, ''),
-			videos.title,
-			videos.duration,
-			videos.thumbnail_url,
-			videos.created_at
+		SELECT videos.id, COALESCE(videos.event_category_id, 0), videos.platform_id, COALESCE(videos.channel_id, ''),
+			videos.title, videos.duration, COALESCE(videos.thumbnail_url, ''), videos.created_at
 		FROM videos
 		INNER JOIN player_videos
 		ON player_videos.video_id=videos.id
@@ -170,7 +149,8 @@ func (m *VideoModel) InsertOrUpdateMany(videos []*models.Video) (int64, error) {
 	}
 
 	stmt := fmt.Sprintf(`
-		INSERT INTO videos(id, event_category_id, platform_id, channel_id, title, duration, thumbnail_url, type, created_at)
+		INSERT INTO videos(id, event_category_id, platform_id, channel_id, title, duration, thumbnail_url, type,
+			created_at)
 		VALUES %s 
 		ON DUPLICATE KEY UPDATE
 			title=VALUES(title),
