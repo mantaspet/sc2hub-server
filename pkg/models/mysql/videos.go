@@ -11,6 +11,40 @@ type VideoModel struct {
 	DB *sql.DB
 }
 
+func (m *VideoModel) SelectPage(fromDate string, query string) ([]*models.Video, error) {
+	stmt := `SELECT id, COALESCE(event_category_id, 0), platform_id, COALESCE(channel_id, ''), title, duration,
+			thumbnail_url, created_at
+	  	FROM videos`
+
+	if fromDate == "" {
+		stmt += " WHERE 1<>?"
+	} else {
+		stmt += " WHERE created_at<=?"
+	}
+
+	if query == "" {
+		stmt += " AND 1<>?"
+	} else {
+		stmt += " AND title LIKE ?"
+	}
+
+	stmt += ` ORDER BY created_at DESC LIMIT ?`
+
+	rows, err := m.DB.Query(stmt, fromDate, "%"+query+"%", models.VideoPageLength+1)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	videos, err := parseVideoRows(rows)
+	if err != nil {
+		return nil, err
+	}
+
+	return videos, nil
+}
+
 func (m *VideoModel) SelectEventBroadcasts(categoryID int, date string) ([]*models.Video, error) {
 	stmt := `SELECT
 			id,

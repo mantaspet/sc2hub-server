@@ -39,6 +39,7 @@ type application struct {
 		InsertPlayerArticles(playerArticles []models.PlayerArticle) (int64, error)
 	}
 	videos interface {
+		SelectPage(fromDate string, query string) ([]*models.Video, error)
 		SelectEventBroadcasts(categoryID int, date string) ([]*models.Video, error)
 		SelectByCategory(categoryID int, query string) ([]*models.Video, error)
 		SelectByPlayer(playerID int, query string) ([]*models.Video, error)

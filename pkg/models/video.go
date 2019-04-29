@@ -5,6 +5,8 @@ import (
 	"time"
 )
 
+var VideoPageLength = 24
+
 type Video struct {
 	ID              string
 	EventID         int
@@ -16,6 +18,11 @@ type Video struct {
 	Duration        string
 	Type            string
 	CreatedAt       time.Time
+}
+
+type PaginatedVideos struct {
+	Items  []*Video
+	Cursor *time.Time
 }
 
 func (v *Video) MarshalJSON() ([]byte, error) {

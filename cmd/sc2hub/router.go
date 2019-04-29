@@ -48,6 +48,7 @@ func (app *application) router() chi.Router {
 	})
 
 	r.Route("/videos", func(r chi.Router) {
+		r.Get("/", app.getAllVideos)
 		r.Get("/query-apis", app.queryVideoAPIs)
 	})
 

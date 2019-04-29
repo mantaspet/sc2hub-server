@@ -8,6 +8,30 @@ import (
 	"strings"
 )
 
+func (app *application) getAllVideos(w http.ResponseWriter, r *http.Request) {
+	videos, err := app.videos.SelectPage(r.URL.Query().Get("from"), r.URL.Query().Get("query"))
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	var res models.PaginatedVideos
+	itemCount := len(videos)
+	if itemCount < models.VideoPageLength {
+		res = models.PaginatedVideos{
+			Cursor: nil,
+			Items:  videos,
+		}
+	} else {
+		res = models.PaginatedVideos{
+			Cursor: &videos[itemCount-1].CreatedAt,
+			Items:  videos[:itemCount-1],
+		}
+	}
+
+	app.json(w, res)
+}
+
 func (app *application) getVideosByCategory(w http.ResponseWriter, r *http.Request) {
 	idParam := chi.URLParam(r, "id")
 	var query string
