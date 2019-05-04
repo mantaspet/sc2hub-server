@@ -21,7 +21,7 @@ type Video struct {
 
 type PaginatedVideos struct {
 	Items  []*Video
-	Cursor *time.Time
+	Cursor int
 }
 
 func (v *Video) MarshalJSON() ([]byte, error) {

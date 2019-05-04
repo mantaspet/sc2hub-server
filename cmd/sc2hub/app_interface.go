@@ -39,11 +39,11 @@ type application struct {
 		InsertPlayerArticles(playerArticles []models.PlayerArticle) (int64, error)
 	}
 	videos interface {
-		SelectPage(fromDate string, query string) ([]*models.Video, error)
+		SelectPage(pageSize int, from int, query string) ([]*models.Video, error)
 		SelectRecent() ([]*models.Video, error)
 		SelectEventBroadcasts(categoryID int, date string) ([]*models.Video, error)
-		SelectByCategory(categoryID int, query string) ([]*models.Video, error)
-		SelectByPlayer(playerID int, query string) ([]*models.Video, error)
+		SelectByCategory(pageSize int, from int, query string, categoryID int) ([]*models.Video, error)
+		SelectByPlayer(pageSize int, from int, query string, playerID int) ([]*models.Video, error)
 		InsertOrUpdateMany(videos []*models.Video) (int64, error)
 	}
 	articles interface {

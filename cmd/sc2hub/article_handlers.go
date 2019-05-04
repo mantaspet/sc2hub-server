@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/go-chi/chi"
 	"github.com/mantaspet/sc2hub-server/pkg/crawlers"
 	"github.com/mantaspet/sc2hub-server/pkg/models"
 	"net/http"
@@ -11,12 +10,27 @@ import (
 	"time"
 )
 
+func getPaginatedArticlesResponse(articles []*models.Article, cursor int) models.PaginatedArticles {
+	var res models.PaginatedArticles
+	itemCount := len(articles)
+	if itemCount < models.ArticlePageLength+1 {
+		res = models.PaginatedArticles{
+			Cursor: 0,
+			Items:  articles,
+		}
+	} else {
+		res = models.PaginatedArticles{
+			Cursor: cursor,
+			Items:  articles[:itemCount-1],
+		}
+	}
+	return res
+}
+
 func (app *application) getAllArticles(w http.ResponseWriter, r *http.Request) {
 	var articles []*models.Article
-	from, err := strconv.Atoi(r.URL.Query().Get("from"))
-	if err != nil {
-		from = 0
-	}
+	var err error
+	from := app.parsePaginationParam(r.URL.Query().Get("from"))
 	if r.URL.Query().Get("recent") != "" {
 		articles, err = app.articles.SelectPage(9, 0, "")
 	} else {
@@ -32,17 +46,12 @@ func (app *application) getAllArticles(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) getArticlesByPlayer(w http.ResponseWriter, r *http.Request) {
-	idParam := chi.URLParam(r, "id")
-	id, err := strconv.Atoi(idParam)
+	id, err := app.parseIDParam(w, r)
 	if err != nil {
-		app.clientError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	from, err := strconv.Atoi(r.URL.Query().Get("from"))
-	if err != nil {
-		from = 0
-	}
+	from := app.parsePaginationParam(r.URL.Query().Get("from"))
 
 	articles, err := app.articles.SelectByPlayer(models.ArticlePageLength, from, r.URL.Query().Get("query"), id)
 	if err != nil {
@@ -55,17 +64,12 @@ func (app *application) getArticlesByPlayer(w http.ResponseWriter, r *http.Reque
 }
 
 func (app *application) getArticlesByCategory(w http.ResponseWriter, r *http.Request) {
-	idParam := chi.URLParam(r, "id")
-	id, err := strconv.Atoi(idParam)
+	id, err := app.parseIDParam(w, r)
 	if err != nil {
-		app.clientError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	from, err := strconv.Atoi(r.URL.Query().Get("from"))
-	if err != nil {
-		from = 0
-	}
+	from := app.parsePaginationParam(r.URL.Query().Get("from"))
 
 	articles, err := app.articles.SelectByCategory(models.ArticlePageLength, from, r.URL.Query().Get("query"), id)
 	if err != nil {
@@ -159,21 +163,4 @@ func (app *application) crawlArticles(w http.ResponseWriter, r *http.Request) {
 	}
 
 	app.json(w, res)
-}
-
-func getPaginatedArticlesResponse(articles []*models.Article, cursor int) models.PaginatedArticles {
-	var res models.PaginatedArticles
-	itemCount := len(articles)
-	if itemCount < models.ArticlePageLength+1 {
-		res = models.PaginatedArticles{
-			Cursor: 0,
-			Items:  articles,
-		}
-	} else {
-		res = models.PaginatedArticles{
-			Cursor: cursor,
-			Items:  articles[:itemCount-1],
-		}
-	}
-	return res
 }

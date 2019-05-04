@@ -1,108 +1,99 @@
 package main
 
 import (
-	"github.com/go-chi/chi"
 	"github.com/mantaspet/sc2hub-server/pkg/models"
 	"net/http"
 	"strconv"
 	"strings"
 )
 
-func (app *application) getAllVideos(w http.ResponseWriter, r *http.Request) {
-	var videos []*models.Video
-	var err error
-
-	if r.URL.Query().Get("recent") != "" {
-		videos, err = app.videos.SelectRecent()
-	} else {
-		videos, err = app.videos.SelectPage(r.URL.Query().Get("from"), r.URL.Query().Get("query"))
-	}
-
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-
+func getPaginatedVideosResponse(videos []*models.Video, cursor int) models.PaginatedVideos {
 	var res models.PaginatedVideos
 	itemCount := len(videos)
-	if itemCount < models.VideoPageLength {
+	if itemCount < models.ArticlePageLength+1 {
 		res = models.PaginatedVideos{
-			Cursor: nil,
+			Cursor: 0,
 			Items:  videos,
 		}
 	} else {
 		res = models.PaginatedVideos{
-			Cursor: &videos[itemCount-1].CreatedAt,
+			Cursor: cursor,
 			Items:  videos[:itemCount-1],
 		}
 	}
-
-	app.json(w, res)
+	return res
 }
 
-func (app *application) getVideosByCategory(w http.ResponseWriter, r *http.Request) {
-	idParam := chi.URLParam(r, "id")
-	var query string
-	if r.URL.Query()["query"] != nil {
-		query = r.URL.Query()["query"][0]
+func (app *application) getAllVideos(w http.ResponseWriter, r *http.Request) {
+	var videos []*models.Video
+	var err error
+
+	from := app.parsePaginationParam(r.URL.Query().Get("from"))
+
+	if r.URL.Query().Get("recent") != "" {
+		videos, err = app.videos.SelectRecent()
+	} else {
+		videos, err = app.videos.SelectPage(models.VideoPageLength, from, r.URL.Query().Get("query"))
 	}
 
-	id, err := strconv.Atoi(idParam)
-	if err != nil {
-		app.clientError(w, http.StatusBadRequest, err)
-		return
-	}
-
-	res, err := app.videos.SelectByCategory(id, query)
 	if err != nil {
 		app.serverError(w, err)
 		return
 	}
 
-	app.json(w, res)
-}
-
-func (app *application) getEventBroadcasts(w http.ResponseWriter, r *http.Request) {
-	idParam := chi.URLParam(r, "id")
-	var date string
-	if r.URL.Query()["date"] != nil {
-		date = r.URL.Query()["date"][0]
-	}
-
-	id, err := strconv.Atoi(idParam)
-	if err != nil {
-		app.clientError(w, http.StatusBadRequest, err)
-		return
-	}
-
-	res, err := app.videos.SelectEventBroadcasts(id, date)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-
+	res := getPaginatedVideosResponse(videos, from+models.VideoPageLength)
 	app.json(w, res)
 }
 
 func (app *application) getVideosByPlayer(w http.ResponseWriter, r *http.Request) {
-	idParam := chi.URLParam(r, "id")
-	var query string
-	if r.URL.Query()["query"] != nil {
-		query = r.URL.Query()["query"][0]
-	}
-
-	id, err := strconv.Atoi(idParam)
+	id, err := app.parseIDParam(w, r)
 	if err != nil {
-		app.clientError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	res, err := app.videos.SelectByPlayer(id, query)
+	from := app.parsePaginationParam(r.URL.Query().Get("from"))
+
+	videos, err := app.videos.SelectByPlayer(models.VideoPageLength, from, r.URL.Query().Get("query"), id)
 	if err != nil {
 		app.serverError(w, err)
 		return
 	}
 
+	res := getPaginatedVideosResponse(videos, from+models.VideoPageLength)
+	app.json(w, res)
+}
+
+func (app *application) getVideosByCategory(w http.ResponseWriter, r *http.Request) {
+	id, err := app.parseIDParam(w, r)
+	if err != nil {
+		return
+	}
+
+	from := app.parsePaginationParam(r.URL.Query().Get("from"))
+
+	videos, err := app.videos.SelectByCategory(models.VideoPageLength, from, r.URL.Query().Get("query"), id)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	res := getPaginatedVideosResponse(videos, from+models.VideoPageLength)
+	app.json(w, res)
+}
+
+func (app *application) getEventBroadcasts(w http.ResponseWriter, r *http.Request) {
+	id, err := app.parseIDParam(w, r)
+	if err != nil {
+		return
+	}
+
+	videos, err := app.videos.SelectEventBroadcasts(id, r.URL.Query().Get("date"))
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	res := getPaginatedVideosResponse(videos, 0)
 	app.json(w, res)
 }
 

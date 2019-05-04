@@ -3,9 +3,28 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/go-chi/chi"
 	"net/http"
 	"runtime/debug"
+	"strconv"
 )
+
+func (app *application) parsePaginationParam(param string) int {
+	from, err := strconv.Atoi(param)
+	if err != nil {
+		from = 0
+	}
+	return from
+}
+
+func (app *application) parseIDParam(w http.ResponseWriter, r *http.Request) (int, error) {
+	idParam := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest, err)
+	}
+	return id, err
+}
 
 func (app *application) serverError(w http.ResponseWriter, err error) {
 	app.logTrace(err)
