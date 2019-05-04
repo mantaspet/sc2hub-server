@@ -16,5 +16,5 @@ type Article struct {
 
 type PaginatedArticles struct {
 	Items  []*Article
-	Cursor *time.Time
+	Cursor int
 }

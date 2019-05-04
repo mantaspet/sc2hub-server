@@ -47,9 +47,9 @@ type application struct {
 		InsertOrUpdateMany(videos []*models.Video) (int64, error)
 	}
 	articles interface {
-		SelectRecent() ([]*models.Article, error)
-		SelectPage(fromDate string, query string) ([]*models.Article, error)
-		SelectByCategory(categoryID int) ([]models.Article, error)
+		SelectPage(pageSize int, from int, query string) ([]*models.Article, error)
+		SelectByCategory(pageSize int, from int, query string, categoryID int) ([]*models.Article, error)
+		SelectByPlayer(pageSize int, from int, query string, playerID int) ([]*models.Article, error)
 		SelectLastInserted(amount int64) ([]*models.Article, error)
 		InsertMany(articles []models.Article) (int64, error)
 	}

@@ -13,31 +13,44 @@ import (
 
 func (app *application) getAllArticles(w http.ResponseWriter, r *http.Request) {
 	var articles []*models.Article
-	var err error
+	from, err := strconv.Atoi(r.URL.Query().Get("from"))
+	if err != nil {
+		from = 0
+	}
 	if r.URL.Query().Get("recent") != "" {
-		articles, err = app.articles.SelectRecent()
+		articles, err = app.articles.SelectPage(9, 0, "")
 	} else {
-		articles, err = app.articles.SelectPage(r.URL.Query().Get("from"), r.URL.Query().Get("query"))
+		articles, err = app.articles.SelectPage(models.ArticlePageLength, from, r.URL.Query().Get("query"))
 	}
 	if err != nil {
 		app.serverError(w, err)
 		return
 	}
 
-	var res models.PaginatedArticles
-	itemCount := len(articles)
-	if itemCount < models.ArticlePageLength {
-		res = models.PaginatedArticles{
-			Cursor: nil,
-			Items:  articles,
-		}
-	} else {
-		res = models.PaginatedArticles{
-			Cursor: &articles[itemCount-1].PublishedAt,
-			Items:  articles[:itemCount-1],
-		}
+	res := getPaginatedArticlesResponse(articles, from+models.ArticlePageLength)
+	app.json(w, res)
+}
+
+func (app *application) getArticlesByPlayer(w http.ResponseWriter, r *http.Request) {
+	idParam := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest, err)
+		return
 	}
 
+	from, err := strconv.Atoi(r.URL.Query().Get("from"))
+	if err != nil {
+		from = 0
+	}
+
+	articles, err := app.articles.SelectByPlayer(models.ArticlePageLength, from, r.URL.Query().Get("query"), id)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	res := getPaginatedArticlesResponse(articles, from+models.ArticlePageLength)
 	app.json(w, res)
 }
 
@@ -49,12 +62,18 @@ func (app *application) getArticlesByCategory(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	res, err := app.articles.SelectByCategory(id)
+	from, err := strconv.Atoi(r.URL.Query().Get("from"))
+	if err != nil {
+		from = 0
+	}
+
+	articles, err := app.articles.SelectByCategory(models.ArticlePageLength, from, r.URL.Query().Get("query"), id)
 	if err != nil {
 		app.serverError(w, err)
 		return
 	}
 
+	res := getPaginatedArticlesResponse(articles, from+models.ArticlePageLength)
 	app.json(w, res)
 }
 
@@ -140,4 +159,21 @@ func (app *application) crawlArticles(w http.ResponseWriter, r *http.Request) {
 	}
 
 	app.json(w, res)
+}
+
+func getPaginatedArticlesResponse(articles []*models.Article, cursor int) models.PaginatedArticles {
+	var res models.PaginatedArticles
+	itemCount := len(articles)
+	if itemCount < models.ArticlePageLength+1 {
+		res = models.PaginatedArticles{
+			Cursor: 0,
+			Items:  articles,
+		}
+	} else {
+		res = models.PaginatedArticles{
+			Cursor: cursor,
+			Items:  articles[:itemCount-1],
+		}
+	}
+	return res
 }

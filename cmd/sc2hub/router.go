@@ -22,8 +22,6 @@ func (app *application) router() chi.Router {
 	r.Route("/events", func(r chi.Router) {
 		r.Get("/", app.getEvents)
 		r.Get("/{id}", app.getEvent)
-		r.Get("/{id}/videos", app.getVideosByCategory)     // TODO replace once video module is implemented
-		r.Get("/{id}/articles", app.getArticlesByCategory) // TODO replace once article module is implemented
 		r.Get("/crawl", app.crawlEvents)
 	})
 
@@ -31,6 +29,7 @@ func (app *application) router() chi.Router {
 		r.Get("/", app.getEventCategories)
 		r.Get("/{id}", app.getEventCategory)
 		r.Get("/{id}/videos", app.getVideosByCategory)
+		r.Get("/{id}/articles", app.getArticlesByCategory)
 		r.Get("/{id}/broadcasts", app.getEventBroadcasts)
 		r.Get("/{id}/articles", app.getArticlesByCategory)
 		r.Get("/{id}/channels", app.getChannelsByCategory)
@@ -48,7 +47,7 @@ func (app *application) router() chi.Router {
 		r.Get("/{id}", app.getPlayer)
 		r.Get("/crawl", app.crawlPlayers)
 		r.Get("/{id}/videos", app.getVideosByPlayer)
-		r.Get("/{id}/articles", app.getArticlesByCategory) // TODO replace once article module is implemented
+		r.Get("/{id}/articles", app.getArticlesByPlayer)
 	})
 
 	r.Route("/videos", func(r chi.Router) {
