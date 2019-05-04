@@ -99,7 +99,8 @@ func (m *VideoModel) SelectByPlayer(pageSize int, from int, query string, player
 		FROM videos
 		INNER JOIN player_videos
 		ON player_videos.video_id=videos.id
-		WHERE player_videos.player_id=? AND title LIKE ?`
+		WHERE player_videos.player_id=? AND title LIKE ?
+		LIMIT ?,?`
 
 	return queryVideosPage(m.DB, stmt, playerID, pageSize, from, query)
 }
