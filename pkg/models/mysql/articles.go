@@ -42,6 +42,8 @@ func queryArticlesPage(db *sql.DB, stmt string, pivotID int, pageSize int, from 
 	}
 	stmt += " ORDER BY articles.published_at DESC LIMIT ?,?"
 	valueArgs = append(valueArgs, from, pageSize+1)
+	fmt.Println(stmt)
+	fmt.Println(valueArgs)
 
 	rows, err := db.Query(stmt, valueArgs...)
 	if err != nil {
@@ -54,7 +56,8 @@ func queryArticlesPage(db *sql.DB, stmt string, pivotID int, pageSize int, from 
 
 func (m *ArticleModel) SelectPage(pageSize int, from int, query string) ([]*models.Article, error) {
 	stmt := `SELECT id, title, source, published_at, COALESCE(excerpt, ''), thumbnail_url, url
-	  	FROM articles`
+	  	FROM articles
+		WHERE 1=1`
 
 	return queryArticlesPage(m.DB, stmt, 0, pageSize, from, query)
 }
