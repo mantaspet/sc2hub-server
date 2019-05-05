@@ -91,6 +91,14 @@ func (app *application) crawlArticles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	teamLiquidArticles, err := crawlers.TeamLiquidNews()
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	crawledArticles = append(crawledArticles, teamLiquidArticles...)
+
 	rowCnt, err := app.articles.InsertMany(crawledArticles)
 	if err != nil {
 		app.serverError(w, err)
@@ -127,7 +135,6 @@ func (app *application) crawlArticles(w http.ResponseWriter, r *http.Request) {
 	var playerArticles []models.PlayerArticle
 	var ecArticles []models.EventCategoryArticle
 	for _, a := range articles {
-		fmt.Println(a.ID)
 		for _, p := range players {
 			if strings.Contains(a.Title, p.PlayerID) || strings.Contains(a.Excerpt, p.PlayerID) {
 				playerArticle := models.PlayerArticle{
@@ -135,7 +142,6 @@ func (app *application) crawlArticles(w http.ResponseWriter, r *http.Request) {
 					ArticleID: a.ID,
 				}
 				playerArticles = append(playerArticles, playerArticle)
-				break
 			}
 		}
 
@@ -147,7 +153,6 @@ func (app *application) crawlArticles(w http.ResponseWriter, r *http.Request) {
 					ArticleID:       a.ID,
 				}
 				ecArticles = append(ecArticles, ecArticle)
-				break
 			}
 		}
 	}
