@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/mantaspet/sc2hub-server/pkg/models/mock"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -15,6 +16,7 @@ func newTestApplication(t *testing.T) *application {
 	return &application{
 		errorLog:          log.New(ioutil.Discard, "", 0),
 		infoLog:           log.New(ioutil.Discard, "", 0),
+		channels:          &mock.ChannelModel{},
 		twitchAccessToken: "mockToken",
 	}
 }
