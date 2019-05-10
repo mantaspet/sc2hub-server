@@ -27,6 +27,11 @@ var YoutubeChannel = &models.Channel{
 	EventCategoryID: 6,
 }
 
+var Channels = []*models.Channel{
+	{"42508152", 1, "starcraft", "StarCraft", "http://imageurl.com", "wcs", 1},
+	{"UCK5eBtuoj_HkdXKHNmBLAXg", 2, "", "AfreecaTV eSports", "http://imageurl.com", "gsl", 2},
+}
+
 func (m *ChannelModel) SelectAllFromTwitch() ([]*models.Channel, error) {
 	return []*models.Channel{TwitchChannel}, nil
 }
