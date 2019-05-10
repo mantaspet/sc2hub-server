@@ -24,7 +24,7 @@ var YoutubeChannel = &models.Channel{
 	Title:           "AfreecaTV eSports",
 	ProfileImageURL: "https://yt3.ggpht.com/a-/AAuE7mBZ1no98oeHv-OkWsyXSL7I9Fuj9LjPZ2JcHg=s88-mo-c-c0xffffffff-rj-k-no",
 	Pattern:         "gsl",
-	EventCategoryID: 2,
+	EventCategoryID: 6,
 }
 
 func (m *ChannelModel) SelectAllFromTwitch() ([]*models.Channel, error) {
@@ -45,7 +45,7 @@ func (m *ChannelModel) SelectByCategory(categoryID int, platformID int) ([]*mode
 	fmt.Println(platformID)
 	if categoryID == 1 && (platformID == 0 || platformID == 1) {
 		return []*models.Channel{TwitchChannel}, nil
-	} else if categoryID == 2 && (platformID == 0 || platformID == 2) {
+	} else if categoryID == 6 && (platformID == 0 || platformID == 2) {
 		return []*models.Channel{YoutubeChannel}, nil
 	} else {
 		return []*models.Channel{}, nil
