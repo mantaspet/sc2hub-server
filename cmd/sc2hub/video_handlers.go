@@ -28,7 +28,7 @@ func (app *application) getAllVideos(w http.ResponseWriter, r *http.Request) {
 	var videos []*models.Video
 	var err error
 
-	from := app.parsePaginationParam(r.URL.Query().Get("from"))
+	from := parsePaginationParam(r.URL.Query().Get("from"))
 
 	if r.URL.Query().Get("recent") != "" {
 		videos, err = app.videos.SelectRecent()
@@ -51,7 +51,7 @@ func (app *application) getVideosByPlayer(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	from := app.parsePaginationParam(r.URL.Query().Get("from"))
+	from := parsePaginationParam(r.URL.Query().Get("from"))
 
 	videos, err := app.videos.SelectByPlayer(models.VideoPageLength, from, r.URL.Query().Get("query"), id)
 	if err != nil {
@@ -69,7 +69,7 @@ func (app *application) getVideosByCategory(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	from := app.parsePaginationParam(r.URL.Query().Get("from"))
+	from := parsePaginationParam(r.URL.Query().Get("from"))
 
 	videos, err := app.videos.SelectByCategory(models.VideoPageLength, from, r.URL.Query().Get("query"), id)
 	if err != nil {

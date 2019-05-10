@@ -30,7 +30,7 @@ func getPaginatedArticlesResponse(articles []*models.Article, cursor int) models
 func (app *application) getAllArticles(w http.ResponseWriter, r *http.Request) {
 	var articles []*models.Article
 	var err error
-	from := app.parsePaginationParam(r.URL.Query().Get("from"))
+	from := parsePaginationParam(r.URL.Query().Get("from"))
 	if r.URL.Query().Get("recent") != "" {
 		articles, err = app.articles.SelectPage(9, 0, "")
 	} else {
@@ -51,7 +51,7 @@ func (app *application) getArticlesByPlayer(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	from := app.parsePaginationParam(r.URL.Query().Get("from"))
+	from := parsePaginationParam(r.URL.Query().Get("from"))
 
 	articles, err := app.articles.SelectByPlayer(models.ArticlePageLength, from, r.URL.Query().Get("query"), id)
 	if err != nil {
@@ -69,7 +69,7 @@ func (app *application) getArticlesByCategory(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	from := app.parsePaginationParam(r.URL.Query().Get("from"))
+	from := parsePaginationParam(r.URL.Query().Get("from"))
 
 	articles, err := app.articles.SelectByCategory(models.ArticlePageLength, from, r.URL.Query().Get("query"), id)
 	if err != nil {

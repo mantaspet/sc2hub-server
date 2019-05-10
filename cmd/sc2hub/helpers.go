@@ -9,7 +9,7 @@ import (
 	"strconv"
 )
 
-func (app *application) parsePaginationParam(param string) int {
+func parsePaginationParam(param string) int {
 	from, err := strconv.Atoi(param)
 	if err != nil {
 		from = 0
