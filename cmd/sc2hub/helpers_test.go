@@ -5,6 +5,8 @@ import (
 )
 
 func TestParsePaginationParam(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name string
 		from string
@@ -32,7 +34,7 @@ func TestParsePaginationParam(t *testing.T) {
 			from := parsePaginationParam(tt.from)
 
 			if from != tt.want {
-				t.Errorf("want %q; got %q", tt.want, from)
+				t.Errorf("want %d; got %d", tt.want, from)
 			}
 		})
 	}
