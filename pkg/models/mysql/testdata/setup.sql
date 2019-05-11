@@ -1,17 +1,15 @@
-# create or replace table articles
-# (
-#     id int unsigned auto_increment,
-#     title varchar(255) not null,
-#     source varchar(255) not null,
-#     published_at date not null,
-#     excerpt text not null,
-#     thumbnail_url text not null,
-#     url text not null,
-#     primary key (title, published_at)
-# );
-#
-# create or replace index if not exists articles_id_index
-#     on articles (id);
+create or replace table articles
+(
+    id int unsigned auto_increment,
+    title varchar(255) not null,
+    source varchar(255) not null,
+    published_at date not null,
+    excerpt text not null,
+    thumbnail_url text not null,
+    url text not null,
+    primary key (title, published_at),
+    index articles_id_index (id)
+);
 
 create or replace table event_categories
 (
@@ -29,31 +27,31 @@ create or replace table event_categories
         unique (pattern)
 );
 
-# create or replace table event_category_articles
-# (
-#     event_category_id int unsigned not null,
-#     article_id int unsigned not null,
-#     primary key (event_category_id, article_id),
-#     constraint event_category_articles_article_id_fk
-#         foreign key (article_id) references articles (id),
-#     constraint event_category_articles_event_category_id_fk
-#         foreign key (event_category_id) references event_categories (id)
-# );
+create or replace table event_category_articles
+(
+    event_category_id int unsigned not null,
+    article_id int unsigned not null,
+    primary key (event_category_id, article_id),
+    constraint event_category_articles_article_id_fk
+        foreign key (article_id) references articles (id),
+    constraint event_category_articles_event_category_id_fk
+        foreign key (event_category_id) references event_categories (id)
+);
 
-# create or replace table events
-# (
-#     id int unsigned auto_increment
-#         primary key,
-#     event_category_id int unsigned null,
-#     team_liquid_id int unsigned null,
-#     title varchar(255) not null,
-#     stage varchar(255) not null,
-#     starts_at datetime not null,
-#     constraint events_team_liquid_id_uindex
-#         unique (team_liquid_id),
-#     constraint events_event_categories_id_fk
-#         foreign key (event_category_id) references event_categories (id)
-# );
+create or replace table events
+(
+    id int unsigned auto_increment
+        primary key,
+    event_category_id int unsigned null,
+    team_liquid_id int unsigned null,
+    title varchar(255) not null,
+    stage varchar(255) not null,
+    starts_at datetime not null,
+    constraint events_team_liquid_id_uindex
+        unique (team_liquid_id),
+    constraint events_event_categories_id_fk
+        foreign key (event_category_id) references event_categories (id)
+);
 
 create or replace table platforms
 (

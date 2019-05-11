@@ -26,6 +26,18 @@ func seedData(db *sql.DB) error {
 			"VALUES ('%v', %v, '%v', '%v', '%v');", c.ID, c.PlatformID, c.Login, c.Title, c.ProfileImageURL)
 	}
 
+	for _, e := range mock.Events {
+		stmt += fmt.Sprintf("INSERT INTO events (title, event_category_id, team_liquid_id, stage, starts_at) "+
+			"VALUES ('%v', %v, %v, '%v', '%v');", e.Title, e.EventCategoryID, e.TeamLiquidID, e.Stage, e.StartsAt)
+	}
+
+	for _, a := range mock.GetMockArticles() {
+		date := a.PublishedAt.Format("2006-01-02")
+		stmt += fmt.Sprintf("INSERT INTO articles (title, source, published_at, excerpt, thumbnail_url, url) "+
+			"VALUES ('%v', '%v', '%v', '%v', '%v', '%v');", a.Title, a.Source, date, a.Excerpt,
+			a.ThumbnailURL, a.URL)
+	}
+
 	stmt += `INSERT INTO event_category_channels (event_category_id, channel_id)
 		VALUES (1, '42508152'), (2, 'UCK5eBtuoj_HkdXKHNmBLAXg');`
 

@@ -7,3 +7,14 @@ var EventCategories = []*models.EventCategory{
 	{2, "Global Starcraft League Code S", "gsl", "https://infourl.com", "http://imageurl.com", "description", 2},
 	{3, "Intel Extreme Masters", "iem", "https://infourl.com", "http://imageurl.com", "", 3},
 }
+
+var EventCategoryPatterns = []*models.EventCategory{
+	{ID: 1, Pattern: "wcs"},
+	{ID: 2, Pattern: "gsl"},
+	{ID: 3, Pattern: "iem"},
+}
+
+var EventCategoryArticles = []models.EventCategoryArticle{
+	{1, 2},
+	{1, 3},
+}

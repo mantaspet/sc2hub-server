@@ -214,15 +214,18 @@ func (m *EventCategoryModel) UpdatePriorities(id int, newPrio int) error {
 	var currentPrio int
 	err = tx.QueryRow(`SELECT priority FROM event_categories WHERE id=?`, id).Scan(&currentPrio)
 	if err != nil {
-		return nil
+		_ = tx.Rollback()
+		return err
 	}
 
 	if currentPrio == newPrio {
+		_ = tx.Rollback()
 		return nil
 	}
 
 	updateStmt, err := tx.Prepare(`UPDATE event_categories SET priority=? WHERE priority=?`)
 	if err != nil {
+		_ = tx.Rollback()
 		return err
 	}
 
@@ -275,6 +278,10 @@ func (m *EventCategoryModel) AssignToEvents(events []models.Event) ([]models.Eve
 }
 
 func (m *EventCategoryModel) InsertEventCategoryArticles(ecArticles []models.EventCategoryArticle) (int64, error) {
+	if len(ecArticles) == 0 {
+		return 0, nil
+	}
+
 	valueStrings := make([]string, 0, len(ecArticles))
 	valueArgs := make([]interface{}, 0, len(ecArticles)*2)
 	for _, eca := range ecArticles {
