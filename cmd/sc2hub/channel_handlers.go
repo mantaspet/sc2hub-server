@@ -50,8 +50,8 @@ func (app *application) getAllTwitchChannels(w http.ResponseWriter, r *http.Requ
 func (app *application) addChannelToCategory(w http.ResponseWriter, r *http.Request) {
 	idParam := chi.URLParam(r, "id")
 	id, err := strconv.Atoi(idParam)
-	if err != nil {
-		app.clientError(w, http.StatusBadRequest, err)
+	if err != nil || id < 1 {
+		app.clientError(w, http.StatusBadRequest, errors.New("must specify a valid category ID"))
 		return
 	}
 
@@ -77,21 +77,21 @@ func (app *application) addChannelToCategory(w http.ResponseWriter, r *http.Requ
 		if twitchIndex > -1 {
 			req.URL = req.URL[:twitchIndex]
 		}
-		channel, err = app.getChannelDataByLogin(req.URL)
+		channel, err = getTwitchChannelDataByLogin(req.URL, app.httpClient)
 	} else if youtubeIndex1 > -1 {
 		req.URL = req.URL[youtubeIndex1+17:]
 		youtubeIndex1 = strings.Index(req.URL, "/")
 		if youtubeIndex1 > -1 {
 			req.URL = req.URL[:youtubeIndex1]
 		}
-		channel, err = app.getYoutubeChannelData(req.URL, "")
+		channel, err = getYoutubeChannelData(req.URL, "", app.httpClient)
 	} else if youtubeIndex2 > -1 {
 		req.URL = req.URL[youtubeIndex2+20:]
 		youtubeIndex2 = strings.Index(req.URL, "/")
 		if youtubeIndex2 > -1 {
 			req.URL = req.URL[:youtubeIndex2]
 		}
-		channel, err = app.getYoutubeChannelData("", req.URL)
+		channel, err = getYoutubeChannelData("", req.URL, app.httpClient)
 	} else {
 		app.validationError(w, map[string]string{"url": "Must be a valid twitch.tv or youtube.com channel URL"})
 		return
@@ -121,10 +121,6 @@ func (app *application) addChannelToCategory(w http.ResponseWriter, r *http.Requ
 
 func (app *application) deleteCategoryChannel(w http.ResponseWriter, r *http.Request) {
 	channelID := chi.URLParam(r, "channelID")
-	if channelID == "" {
-		app.clientError(w, http.StatusBadRequest, errors.New("must specify channel ID"))
-		return
-	}
 
 	categoryID, err := strconv.Atoi(chi.URLParam(r, "categoryID"))
 	if err != nil || categoryID < 1 {
@@ -137,11 +133,7 @@ func (app *application) deleteCategoryChannel(w http.ResponseWriter, r *http.Req
 		app.clientError(w, http.StatusNotFound, errors.New("no channel found in category"))
 		return
 	} else if err != nil {
-		if strings.Contains(err.Error(), "foreign key constraint fails") {
-			app.clientError(w, http.StatusConflict, err)
-		} else {
-			app.serverError(w, err)
-		}
+		app.serverError(w, err)
 		return
 	}
 

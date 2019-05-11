@@ -29,7 +29,6 @@ func seedData(db *sql.DB) error {
 	stmt += `INSERT INTO event_category_channels (event_category_id, channel_id)
 		VALUES (1, '42508152'), (2, 'UCK5eBtuoj_HkdXKHNmBLAXg');`
 
-	fmt.Println(stmt)
 	_, err := db.Exec(stmt)
 	return err
 }

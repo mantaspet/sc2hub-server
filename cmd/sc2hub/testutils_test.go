@@ -1,7 +1,11 @@
 package main
 
 import (
+	"bytes"
+	"errors"
+	"github.com/mantaspet/sc2hub-server/pkg/models"
 	"github.com/mantaspet/sc2hub-server/pkg/models/mock"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -12,13 +16,26 @@ import (
 
 // Create a newTestApplication helper which returns an instance of our
 // application struct containing mocked dependencies.
-func newTestApplication(t *testing.T) *application {
-	return &application{
+func newTestApplication() *application {
+	app := &application{
 		errorLog:          log.New(ioutil.Discard, "", 0),
 		infoLog:           log.New(ioutil.Discard, "", 0),
 		channels:          &mock.ChannelModel{},
 		twitchAccessToken: "mockToken",
 	}
+
+	getTwitchChannelDataByLogin = func(login string, httpClient *http.Client) (models.Channel, error) {
+		if login != "starcraft" {
+			return models.Channel{}, errors.New("channel does not exist")
+		}
+		return *mock.Channels[0], nil
+	}
+
+	getYoutubeChannelData = func(login string, id string, httpClient *http.Client) (models.Channel, error) {
+		return *mock.Channels[1], nil
+	}
+
+	return app
 }
 
 // Define a custom testServer type which anonymously embeds a httptest.Server
@@ -55,8 +72,14 @@ func newTestServer(t *testing.T, h http.Handler) *testServer {
 // Implement a get method on our custom testServer type. This makes a GET
 // request to a given url path on the test server, and returns the response
 // status code, headers and body.
-func (ts *testServer) get(t *testing.T, urlPath string) (int, http.Header, []byte) {
-	rs, err := ts.Client().Get(ts.URL + urlPath)
+func (ts *testServer) sendRequest(t *testing.T, method string, urlPath string, payload []byte) (int, http.Header, []byte) {
+	var reqBody io.Reader
+	if payload != nil {
+		reqBody = bytes.NewBuffer(payload)
+	}
+	req, err := http.NewRequest(method, ts.URL+urlPath, reqBody)
+
+	rs, err := ts.Client().Do(req)
 	if err != nil {
 		t.Fatal(err)
 	}

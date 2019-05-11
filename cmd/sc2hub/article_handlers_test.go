@@ -1,7 +1,7 @@
 package main
 
 //func TestPing(t *testing.T) {
-//	app := newTestApplication(t)
+//	app := newTestApplication()
 //	ts := newTestServer(t, app.router())
 //	defer ts.Close()
 //

@@ -113,12 +113,12 @@ func (app *application) getTwitchVideos(channel *models.Channel) ([]*models.Vide
 	return videos, nil
 }
 
-func (app *application) getChannelDataByLogin(login string) (models.Channel, error) {
+var getTwitchChannelDataByLogin = func(login string, httpClient *http.Client) (models.Channel, error) {
 	var channel models.Channel
 	url := "https://api.twitch.tv/helix/users?login=" + login
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Set("Client-ID", "hmw2ygtkoc9si4001jxq2xmrmc8g99")
-	res, err := app.httpClient.Do(req)
+	res, err := httpClient.Do(req)
 	if err != nil {
 		return channel, err
 	}

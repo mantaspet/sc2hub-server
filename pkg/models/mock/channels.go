@@ -1,73 +1,68 @@
 package mock
 
 import (
-	"fmt"
+	"errors"
 	"github.com/mantaspet/sc2hub-server/pkg/models"
 )
 
 type ChannelModel struct{}
-
-var TwitchChannel = &models.Channel{
-	ID:              "42508152",
-	PlatformID:      1,
-	Login:           "starcraft",
-	Title:           "StarCraft",
-	ProfileImageURL: "https://static-cdn.jtvnw.net/jtv_user_pictures/0c9813cae3797d96-profile_image-300x300.png",
-	Pattern:         "wcs",
-	EventCategoryID: 1,
-}
-
-var YoutubeChannel = &models.Channel{
-	ID:              "UCK5eBtuoj_HkdXKHNmBLAXg",
-	PlatformID:      2,
-	Login:           "",
-	Title:           "AfreecaTV eSports",
-	ProfileImageURL: "https://yt3.ggpht.com/a-/AAuE7mBZ1no98oeHv-OkWsyXSL7I9Fuj9LjPZ2JcHg=s88-mo-c-c0xffffffff-rj-k-no",
-	Pattern:         "gsl",
-	EventCategoryID: 6,
-}
 
 var Channels = []*models.Channel{
 	{"42508152", 1, "starcraft", "StarCraft", "http://imageurl.com", "wcs", 1},
 	{"UCK5eBtuoj_HkdXKHNmBLAXg", 2, "", "AfreecaTV eSports", "http://imageurl.com", "gsl", 2},
 }
 
+func GetPlatformChannels(platformID int) []*models.Channel {
+	var channels []*models.Channel
+	for _, c := range Channels {
+		if c.PlatformID == platformID {
+			channels = append(channels, c)
+		}
+	}
+	return channels
+}
+
+func GetCategoryChannels(categoryID int, platformID int) []*models.Channel {
+	channels := make([]*models.Channel, 0, 2)
+	for _, c := range Channels {
+		if c.EventCategoryID == categoryID && (platformID == 0 || platformID == c.PlatformID) {
+			channels = append(channels, c)
+		}
+	}
+	return channels
+}
+
 func (m *ChannelModel) SelectAllFromTwitch() ([]*models.Channel, error) {
-	return []*models.Channel{TwitchChannel}, nil
+	return GetPlatformChannels(1), nil
 }
 
 func (m *ChannelModel) SelectFromAllCategories(platformID int) ([]*models.Channel, error) {
 	switch platformID {
 	case 1:
-		return []*models.Channel{TwitchChannel}, nil
+		return GetPlatformChannels(1), nil
+	case 2:
+		return GetPlatformChannels(2), nil
 	default:
-		return []*models.Channel{YoutubeChannel}, nil
+		return Channels, nil
 	}
 }
 
 func (m *ChannelModel) SelectByCategory(categoryID int, platformID int) ([]*models.Channel, error) {
-	fmt.Println(categoryID)
-	fmt.Println(platformID)
-	if categoryID == 1 && (platformID == 0 || platformID == 1) {
-		return []*models.Channel{TwitchChannel}, nil
-	} else if categoryID == 6 && (platformID == 0 || platformID == 2) {
-		return []*models.Channel{YoutubeChannel}, nil
-	} else {
-		return []*models.Channel{}, nil
-	}
+	return GetCategoryChannels(categoryID, platformID), nil
 }
 
 func (m *ChannelModel) Insert(channel models.Channel, categoryID int) (*models.Channel, error) {
-	channel.EventCategoryID = categoryID
+	if channel.ID == "UCK5eBtuoj_HkdXKHNmBLAXg" && categoryID == 2 {
+		return nil, errors.New("error: Duplicate entry")
+	}
 	return &channel, nil
 }
 
 func (m *ChannelModel) DeleteFromCategory(channelID string, categoryID int) error {
-	if channelID == "42508152" && categoryID == 1 {
-		return nil
-	} else if channelID == "UCK5eBtuoj_HkdXKHNmBLAXg" && categoryID == 2 {
-		return nil
-	} else {
-		return models.ErrNotFound
+	for _, c := range Channels {
+		if c.ID == channelID && c.EventCategoryID == categoryID {
+			return nil
+		}
 	}
+	return models.ErrNotFound
 }
