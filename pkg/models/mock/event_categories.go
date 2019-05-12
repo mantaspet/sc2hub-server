@@ -18,3 +18,8 @@ var EventCategoryArticles = []models.EventCategoryArticle{
 	{1, 2},
 	{1, 3},
 }
+
+var InvalidEventCategoryArticles = []models.EventCategoryArticle{
+	{4, 2},
+	{1, 5},
+}

@@ -202,6 +202,13 @@ func TestEventCategoryModel_Update(t *testing.T) {
 		wantErr error
 	}{
 		{
+			name:    "Valid",
+			id:      "3",
+			ec:      updatedCategory,
+			wantRes: updatedCategory,
+			wantErr: nil,
+		},
+		{
 			name:    "Duplicate field",
 			ec:      mock.EventCategories[0],
 			id:      "3",
@@ -209,11 +216,25 @@ func TestEventCategoryModel_Update(t *testing.T) {
 			wantErr: errors.New("'event_categories_name_uindex'"),
 		},
 		{
-			name:    "Valid",
+			name:    "Empty category",
+			ec:      &models.EventCategory{},
 			id:      "3",
-			ec:      updatedCategory,
-			wantRes: updatedCategory,
+			wantRes: &models.EventCategory{ID: 3, Priority: 3},
 			wantErr: nil,
+		},
+		{
+			name:    "Non existing ID",
+			id:      "4",
+			ec:      updatedCategory,
+			wantRes: nil,
+			wantErr: errors.New("no rows in result set"),
+		},
+		{
+			name:    "Negative ID",
+			id:      "-1",
+			ec:      updatedCategory,
+			wantRes: nil,
+			wantErr: errors.New("no rows in result set"),
 		},
 	}
 
@@ -260,6 +281,11 @@ func TestEventCategoryModel_Delete(t *testing.T) {
 		{
 			name:    "Not existing",
 			id:      "4",
+			wantErr: errors.New("no rows in result set"),
+		},
+		{
+			name:    "Negative ID",
+			id:      "-1",
 			wantErr: errors.New("no rows in result set"),
 		},
 	}
@@ -413,10 +439,16 @@ func TestEventCategoryModel_InsertEventCategoryArticles(t *testing.T) {
 		wantErr    error
 	}{
 		{
-			name:       "With data",
+			name:       "With valid data",
 			ecArticles: mock.EventCategoryArticles,
 			wantRes:    2,
 			wantErr:    nil,
+		},
+		{
+			name:       "With invalid data",
+			ecArticles: mock.InvalidEventCategoryArticles,
+			wantRes:    0,
+			wantErr:    errors.New("a foreign key constraint fails"),
 		},
 		{
 			name:       "Without data",
