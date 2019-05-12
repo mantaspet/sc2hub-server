@@ -148,8 +148,8 @@ create table users
 (
     id int unsigned auto_increment
         primary key,
-    email varchar(191) not null,
+    username varchar(191) not null,
     password_hash varchar(255) not null,
-    constraint users_email_uindex
+    constraint users_username_uindex
         unique (email)
 );
