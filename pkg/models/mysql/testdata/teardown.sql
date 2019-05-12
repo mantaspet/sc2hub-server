@@ -9,3 +9,4 @@ drop table events;
 drop table channels;
 drop table event_categories;
 drop table platforms;
+drop table users;

@@ -1,4 +1,4 @@
-create or replace table articles
+create table articles
 (
     id int unsigned auto_increment,
     title varchar(255) not null,
@@ -7,19 +7,19 @@ create or replace table articles
     excerpt text not null,
     thumbnail_url text not null,
     url text not null,
-    primary key (title, published_at),
+    primary key (title(64), published_at),
     index articles_id_index (id)
 );
 
-create or replace table event_categories
+create table event_categories
 (
     id int unsigned auto_increment
         primary key,
     name varchar(191) not null,
     pattern varchar(191) not null,
-    info_url text default '' not null,
-    image_url text default '' not null,
-    description text default '' not null,
+    info_url text null,
+    image_url text null,
+    description text null,
     priority int unsigned not null,
     constraint event_categories_name_uindex
         unique (name),
@@ -27,7 +27,7 @@ create or replace table event_categories
         unique (pattern)
 );
 
-create or replace table event_category_articles
+create table event_category_articles
 (
     event_category_id int unsigned not null,
     article_id int unsigned not null,
@@ -38,7 +38,7 @@ create or replace table event_category_articles
         foreign key (event_category_id) references event_categories (id)
 );
 
-create or replace table events
+create table events
 (
     id int unsigned auto_increment
         primary key,
@@ -53,14 +53,14 @@ create or replace table events
         foreign key (event_category_id) references event_categories (id)
 );
 
-create or replace table platforms
+create table platforms
 (
     id int unsigned auto_increment
         primary key,
     name varchar(255) not null
 );
 
-create or replace table channels
+create table channels
 (
     id varchar(64) not null
         primary key,
@@ -72,7 +72,7 @@ create or replace table channels
         foreign key (platform_id) references platforms (id)
 );
 
-create or replace table event_category_channels
+create table event_category_channels
 (
     id int unsigned auto_increment
         primary key,
@@ -84,7 +84,7 @@ create or replace table event_category_channels
         foreign key (event_category_id) references event_categories (id)
 );
 
-create or replace table players
+create table players
 (
     id int unsigned auto_increment
         primary key,
@@ -95,15 +95,15 @@ create or replace table players
     country varchar(255) default '' not null,
     total_earnings decimal default 0 not null,
     date_of_birth date null,
-    liquipedia_url text default '' not null,
-    image_url text default '' not null,
-    stream_url text default '' not null,
+    liquipedia_url text null,
+    image_url text null,
+    stream_url text null,
     is_retired tinyint(1) default 0 not null,
     constraint players_player_id_uindex
         unique (player_id)
 );
 
-create or replace table player_articles
+create table player_articles
 (
     player_id int unsigned not null,
     article_id int unsigned not null,
@@ -114,7 +114,7 @@ create or replace table player_articles
         foreign key (player_id) references players (id)
 );
 
-create or replace table videos
+create table videos
 (
     id varchar(64) not null
         primary key,
@@ -123,7 +123,7 @@ create or replace table videos
     channel_id varchar(64) null,
     title varchar(255) not null,
     duration varchar(16) default '' not null,
-    thumbnail_url text default '' not null,
+    thumbnail_url text null,
     created_at datetime default current_timestamp() not null,
     type varchar(64) default '' null,
     constraint videos_channels_id_fk
@@ -142,4 +142,14 @@ create table player_videos
         foreign key (player_id) references players (id),
     constraint player_videos_videos_id_fk
         foreign key (video_id) references videos (id)
+);
+
+create table users
+(
+    id int unsigned auto_increment
+        primary key,
+    email varchar(191) not null,
+    password_hash varchar(255) not null,
+    constraint users_email_uindex
+        unique (email)
 );
