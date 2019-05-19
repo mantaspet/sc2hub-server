@@ -1,10 +1,20 @@
 # sc2hub-server
 
+Server side repository for sc2hub.net
+
 Start the app:
-go run ./cmd/sc2hub -addr={address} >>/tmp/info.log 2>>/tmp/error.log
 
-Server side repo
+    go run ./cmd/sc2hub -secret {JWT_CLIENT_SECRET}
+    
+Create DB users:
 
-Sites to crawl:
-* https://www.teamliquid.net/calendar/?view=month&year=2019&month=2&day=13&game=1
-* https://gamestoday.info/category/pc/starcraft/
+    go run ./cmd/create_user
+    Enter username, press enter
+    Enter password, press enter
+
+Other flags:
+
+    -prod: if true, start HTTPS server instead of HTTP. Default: false
+    -addr: HTTP network address. Default: :443
+    -dsn: MySQL data source name. Default: root:root@/sc2hub
+    -origin: Client app origin URL (for handling preflight requests). Default: http://localhost:4200
