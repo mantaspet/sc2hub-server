@@ -35,7 +35,15 @@ func Required(value string) string {
 
 func MaxLength(value string, d int) string {
 	if utf8.RuneCountInString(value) > d {
-		err := fmt.Sprintf("Field is too long (maximum is %d characters)", d)
+		err := fmt.Sprintf("Field is too long (maximum %d characters)", d)
+		return err
+	}
+	return ""
+}
+
+func MinLength(value string, d int) string {
+	if utf8.RuneCountInString(value) < d {
+		err := fmt.Sprintf("Field is too short (mininum %d characters)", d)
 		return err
 	}
 	return ""

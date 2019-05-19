@@ -60,4 +60,7 @@ type application struct {
 		Insert(channel models.Channel, categoryID int) (*models.Channel, error)
 		DeleteFromCategory(channelID string, categoryID int) error
 	}
+	users interface {
+		SelectOne(username string) (*models.User, error)
+	}
 }

@@ -14,10 +14,11 @@ import (
 )
 
 var (
-	flgProduction = false
-	flgAddr       = ":443"
-	flgDsn        = ""
-	flgOrigin     = ""
+	flgProduction   = false
+	flgAddr         = ":443"
+	flgDsn          = ""
+	flgOrigin       = ""
+	flgClientSecret = ""
 )
 
 func parseFlags() {
@@ -25,6 +26,7 @@ func parseFlags() {
 	flag.StringVar(&flgAddr, "addr", ":443", "HTTPS network address")
 	flag.StringVar(&flgDsn, "dsn", "root:root@/sc2hub", "MySQL data source name")
 	flag.StringVar(&flgOrigin, "origin", "http://localhost:4200", "client origin")
+	flag.StringVar(&flgClientSecret, "secret", "", "JWT auth client secret")
 	flag.Parse()
 }
 
@@ -43,6 +45,10 @@ func openDB(dsn string) (*sql.DB, error) {
 
 func main() {
 	parseFlags()
+	if flgClientSecret == "" {
+		log.Fatal("must specify a value for flag 'secret'")
+	}
+	signingKey = []byte(flgClientSecret)
 
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Llongfile)
@@ -68,6 +74,7 @@ func main() {
 		articles:        &mysql.ArticleModel{DB: db},
 		videos:          &mysql.VideoModel{DB: db},
 		channels:        &mysql.ChannelModel{DB: db},
+		users:           &mysql.UserModel{DB: db},
 	}
 
 	err = app.getTwitchAccessToken()

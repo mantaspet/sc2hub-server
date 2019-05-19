@@ -7,6 +7,7 @@ require (
 	github.com/antchfx/htmlquery v1.0.0 // indirect
 	github.com/antchfx/xmlquery v1.0.0 // indirect
 	github.com/antchfx/xpath v0.0.0-20190319080838-ce1d48779e67 // indirect
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-chi/chi v4.0.2+incompatible
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/gobwas/glob v0.2.3 // indirect

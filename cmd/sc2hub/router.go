@@ -33,12 +33,12 @@ func (app *application) router() chi.Router {
 		r.Get("/{id}/broadcasts", app.getEventBroadcasts)
 		r.Get("/{id}/articles", app.getArticlesByCategory)
 		r.Get("/{id}/channels", app.getChannelsByCategory)
-		r.Post("/{id}/channels", app.addChannelToCategory)
-		r.Delete("/{categoryID}/channels/{channelID}", app.deleteCategoryChannel)
-		r.Post("/", app.createEventCategory)
-		r.Put("/{id}", app.updateEventCategory)
-		r.Put("/reorder", app.reorderEventCategories)
-		r.Delete("/{id}", app.deleteEventCategory)
+		r.Post("/{id}/channels", app.isAuthenticated(app.addChannelToCategory))
+		r.Delete("/{categoryID}/channels/{channelID}", app.isAuthenticated(app.deleteCategoryChannel))
+		r.Post("/", app.isAuthenticated(app.createEventCategory))
+		r.Put("/{id}", app.isAuthenticated(app.updateEventCategory))
+		r.Put("/reorder", app.isAuthenticated(app.reorderEventCategories))
+		r.Delete("/{id}", app.isAuthenticated(app.deleteEventCategory))
 		r.Options("/*", app.genericPreflightHandler)
 	})
 
@@ -58,6 +58,8 @@ func (app *application) router() chi.Router {
 	r.Route("/twitch", func(r chi.Router) {
 		r.Get("/app-access-token", app.getTwitchAppAccessToken)
 	})
+
+	r.Post("/auth/token", app.getAccessToken)
 
 	return r
 }
