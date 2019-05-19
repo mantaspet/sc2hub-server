@@ -35,6 +35,12 @@ func newTestApplication() *application {
 		return *mock.Channels[1], nil
 	}
 
+	isAuthenticated = func(app *application, endpoint func(w http.ResponseWriter, r *http.Request)) http.HandlerFunc {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			endpoint(w, r)
+		})
+	}
+
 	return app
 }
 

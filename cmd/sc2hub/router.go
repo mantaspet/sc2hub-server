@@ -12,7 +12,7 @@ func (app *application) router() chi.Router {
 
 	r.Route("/articles", func(r chi.Router) {
 		r.Get("/", app.getAllArticles)
-		r.Get("/crawl", app.isAuthenticated(app.initArticleCrawler))
+		r.Get("/crawl", isAuthenticated(app, app.initArticleCrawler))
 	})
 
 	r.Route("/channels", func(r chi.Router) {
@@ -22,7 +22,7 @@ func (app *application) router() chi.Router {
 	r.Route("/events", func(r chi.Router) {
 		r.Get("/", app.getEvents)
 		r.Get("/{id}", app.getEvent)
-		r.Get("/crawl", app.isAuthenticated(app.initEventCrawler))
+		r.Get("/crawl", isAuthenticated(app, app.initEventCrawler))
 	})
 
 	r.Route("/event-categories", func(r chi.Router) {
@@ -33,26 +33,26 @@ func (app *application) router() chi.Router {
 		r.Get("/{id}/broadcasts", app.getEventBroadcasts)
 		r.Get("/{id}/articles", app.getArticlesByCategory)
 		r.Get("/{id}/channels", app.getChannelsByCategory)
-		r.Post("/{id}/channels", app.isAuthenticated(app.addChannelToCategory))
-		r.Delete("/{categoryID}/channels/{channelID}", app.isAuthenticated(app.deleteCategoryChannel))
-		r.Post("/", app.isAuthenticated(app.createEventCategory))
-		r.Put("/{id}", app.isAuthenticated(app.updateEventCategory))
-		r.Put("/reorder", app.isAuthenticated(app.reorderEventCategories))
-		r.Delete("/{id}", app.isAuthenticated(app.deleteEventCategory))
+		r.Post("/{id}/channels", isAuthenticated(app, app.addChannelToCategory))
+		r.Delete("/{categoryID}/channels/{channelID}", isAuthenticated(app, app.deleteCategoryChannel))
+		r.Post("/", isAuthenticated(app, app.createEventCategory))
+		r.Put("/{id}", isAuthenticated(app, app.updateEventCategory))
+		r.Put("/reorder", isAuthenticated(app, app.reorderEventCategories))
+		r.Delete("/{id}", isAuthenticated(app, app.deleteEventCategory))
 		r.Options("/*", app.genericPreflightHandler)
 	})
 
 	r.Route("/players", func(r chi.Router) {
 		r.Get("/", app.getAllPlayers)
 		r.Get("/{id}", app.getPlayer)
-		r.Get("/crawl", app.isAuthenticated(app.initPlayerCrawler))
+		r.Get("/crawl", isAuthenticated(app, app.initPlayerCrawler))
 		r.Get("/{id}/videos", app.getVideosByPlayer)
 		r.Get("/{id}/articles", app.getArticlesByPlayer)
 	})
 
 	r.Route("/videos", func(r chi.Router) {
 		r.Get("/", app.getAllVideos)
-		r.Get("/query-apis", app.isAuthenticated(app.initVideoQuerying))
+		r.Get("/query-apis", isAuthenticated(app, app.initVideoQuerying))
 	})
 
 	r.Route("/twitch", func(r chi.Router) {

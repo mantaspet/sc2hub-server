@@ -30,7 +30,7 @@ func (app *application) generateJWT(username string) (string, error) {
 	return tokenString, nil
 }
 
-func (app *application) isAuthenticated(endpoint func(w http.ResponseWriter, r *http.Request)) http.HandlerFunc {
+var isAuthenticated = func(app *application, endpoint func(w http.ResponseWriter, r *http.Request)) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Header["Token"] != nil {
 			token, err := jwt.Parse(r.Header["Token"][0], func(token *jwt.Token) (interface{}, error) {
