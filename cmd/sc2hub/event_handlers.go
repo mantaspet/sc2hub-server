@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"github.com/go-chi/chi"
 	"github.com/mantaspet/sc2hub-server/pkg/crawlers"
 	"github.com/mantaspet/sc2hub-server/pkg/models"
@@ -61,9 +60,7 @@ func (app *application) getEvent(w http.ResponseWriter, r *http.Request) {
 	app.json(w, res)
 }
 
-func (app *application) crawlEvents(w http.ResponseWriter, r *http.Request) {
-	start := time.Now()
-	defer fmt.Printf("Successfully crawled teamliquid.net events. Elapsed time: %v\n", time.Since(start))
+func (app *application) initEventCrawler(w http.ResponseWriter, r *http.Request) {
 	year := r.URL.Query().Get("year")
 	month := r.URL.Query().Get("month")
 	if len(month) != 2 {
@@ -73,29 +70,38 @@ func (app *application) crawlEvents(w http.ResponseWriter, r *http.Request) {
 		year = time.Now().UTC().Format("2006")
 	}
 
-	events, err := crawlers.TeamliquidEvents(year, month)
+	res, err := app.crawlEvents(year, month)
 	if err != nil {
 		app.serverError(w, err)
 		return
+	}
+
+	app.json(w, res)
+}
+
+func (app *application) crawlEvents(year string, month string) (string, error) {
+	start := time.Now()
+	defer app.infoLog.Printf("Crawled teamliquid.net events. Elapsed time: %v\n", time.Since(start))
+
+	events, err := crawlers.TeamliquidEvents(year, month)
+	if err != nil {
+		return "", err
 	}
 
 	events, err = app.eventCategories.AssignToEvents(events)
 	if err != nil {
-		app.serverError(w, err)
-		return
+		return "", err
 	}
 	if len(events) == 0 {
-		app.json(w, "No events found")
-		return
+		return "", err
 	}
 
 	rowCnt, err := app.events.InsertMany(events)
 	if err != nil {
-		app.serverError(w, err)
-		return
+		return "", err
 	}
 	rowCntStr := strconv.Itoa(int(rowCnt))
 	res := "Rows affected: " + rowCntStr
 
-	app.json(w, res)
+	return res, nil
 }

@@ -12,7 +12,7 @@ func (app *application) router() chi.Router {
 
 	r.Route("/articles", func(r chi.Router) {
 		r.Get("/", app.getAllArticles)
-		r.Get("/crawl", app.crawlArticles)
+		r.Get("/crawl", app.isAuthenticated(app.initArticleCrawler))
 	})
 
 	r.Route("/channels", func(r chi.Router) {
@@ -22,7 +22,7 @@ func (app *application) router() chi.Router {
 	r.Route("/events", func(r chi.Router) {
 		r.Get("/", app.getEvents)
 		r.Get("/{id}", app.getEvent)
-		r.Get("/crawl", app.crawlEvents)
+		r.Get("/crawl", app.isAuthenticated(app.initEventCrawler))
 	})
 
 	r.Route("/event-categories", func(r chi.Router) {
@@ -45,14 +45,14 @@ func (app *application) router() chi.Router {
 	r.Route("/players", func(r chi.Router) {
 		r.Get("/", app.getAllPlayers)
 		r.Get("/{id}", app.getPlayer)
-		r.Get("/crawl", app.crawlPlayers)
+		r.Get("/crawl", app.isAuthenticated(app.initPlayerCrawler))
 		r.Get("/{id}/videos", app.getVideosByPlayer)
 		r.Get("/{id}/articles", app.getArticlesByPlayer)
 	})
 
 	r.Route("/videos", func(r chi.Router) {
 		r.Get("/", app.getAllVideos)
-		r.Get("/query-apis", app.queryVideoAPIs)
+		r.Get("/query-apis", app.isAuthenticated(app.initVideoQuerying))
 	})
 
 	r.Route("/twitch", func(r chi.Router) {

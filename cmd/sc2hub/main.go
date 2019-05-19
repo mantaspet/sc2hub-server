@@ -89,6 +89,8 @@ func main() {
 		Handler:  app.router(),
 	}
 
+	app.initScheduler()
+
 	if flgProduction {
 		certManager := autocert.Manager{
 			Prompt: autocert.AcceptTOS,

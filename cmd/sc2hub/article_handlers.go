@@ -81,55 +81,57 @@ func (app *application) getArticlesByCategory(w http.ResponseWriter, r *http.Req
 	app.json(w, res)
 }
 
-func (app *application) crawlArticles(w http.ResponseWriter, r *http.Request) {
+func (app *application) initArticleCrawler(w http.ResponseWriter, r *http.Request) {
+	res, err := app.crawlArticles()
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	app.json(w, res)
+}
+
+func (app *application) crawlArticles() (string, error) {
 	start := time.Now()
 	defer fmt.Printf("Successfully crawled articles. Elapsed time: %v\n", time.Since(start))
 
 	crawledArticles, err := crawlers.BlizzardNews()
 	if err != nil {
-		app.serverError(w, err)
-		return
+		return "", err
 	}
 
 	teamLiquidArticles, err := crawlers.TeamLiquidNews()
 	if err != nil {
-		app.serverError(w, err)
-		return
+		return "", err
 	}
 
 	crawledArticles = append(crawledArticles, teamLiquidArticles...)
 
 	rowCnt, err := app.articles.InsertMany(crawledArticles)
 	if err != nil {
-		app.serverError(w, err)
-		return
+		return "", err
 	}
 	rowCntStr := strconv.Itoa(int(rowCnt))
 	res := "Rows affected: " + rowCntStr
 
 	if rowCnt == 0 {
-		app.json(w, res)
-		return
+		return res, nil
 	}
 
 	articles, err := app.articles.SelectLastInserted(rowCnt)
 	if err != nil {
-		app.serverError(w, err)
-		return
+		return "", err
 	}
 
 	// Select all player IDs for matching against crawled article titles and excerpts
 	players, err := app.players.SelectAllPlayerIDs()
 	if err != nil {
-		app.serverError(w, err)
-		return
+		return "", err
 	}
 
 	// Select all event category patterns for matching against crawled article titles and excerpts
 	ecs, err := app.eventCategories.SelectAllPatterns()
 	if err != nil {
-		app.serverError(w, err)
-		return
+		return "", err
 	}
 
 	var playerArticles []models.PlayerArticle
@@ -159,13 +161,13 @@ func (app *application) crawlArticles(w http.ResponseWriter, r *http.Request) {
 
 	_, err = app.players.InsertPlayerArticles(playerArticles)
 	if err != nil {
-		app.serverError(w, err)
+		app.errorLog.Println(err)
 	}
 
 	_, err = app.eventCategories.InsertEventCategoryArticles(ecArticles)
 	if err != nil {
-		app.serverError(w, err)
+		app.errorLog.Println(err)
 	}
 
-	app.json(w, res)
+	return res, nil
 }

@@ -97,11 +97,20 @@ func (app *application) getEventBroadcasts(w http.ResponseWriter, r *http.Reques
 	app.json(w, res)
 }
 
-func (app *application) queryVideoAPIs(w http.ResponseWriter, r *http.Request) {
-	channels, err := app.channels.SelectFromAllCategories(0)
+func (app *application) initVideoQuerying(w http.ResponseWriter, r *http.Request) {
+	res, err := app.queryVideoAPIs()
 	if err != nil {
 		app.serverError(w, err)
 		return
+	}
+
+	app.json(w, res)
+}
+
+func (app *application) queryVideoAPIs() (string, error) {
+	channels, err := app.channels.SelectFromAllCategories(0)
+	if err != nil {
+		return "", err
 	}
 
 	var videos []*models.Video
@@ -114,8 +123,7 @@ func (app *application) queryVideoAPIs(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if err != nil {
-			app.serverError(w, err)
-			return
+			return "", nil
 		}
 
 		if len(videos) > 0 {
@@ -125,14 +133,12 @@ func (app *application) queryVideoAPIs(w http.ResponseWriter, r *http.Request) {
 
 	rowCnt, err := app.videos.InsertOrUpdateMany(videosToInsert)
 	if err != nil {
-		app.serverError(w, err)
-		return
+		return "", nil
 	}
 
 	players, err := app.players.SelectAllPlayerIDs()
 	if err != nil {
-		app.serverError(w, err)
-		return
+		return "", nil
 	}
 
 	var playerVideos []models.PlayerVideo
@@ -150,11 +156,11 @@ func (app *application) queryVideoAPIs(w http.ResponseWriter, r *http.Request) {
 	}
 	_, err = app.players.InsertPlayerVideos(playerVideos)
 	if err != nil {
-		app.serverError(w, err)
+		return "", nil
 	}
 
 	rowCntStr := strconv.Itoa(int(rowCnt))
 	res := "Rows affected: " + rowCntStr
 
-	app.json(w, res)
+	return res, nil
 }

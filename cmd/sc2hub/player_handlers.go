@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"github.com/go-chi/chi"
 	"github.com/mantaspet/sc2hub-server/pkg/crawlers"
 	"github.com/mantaspet/sc2hub-server/pkg/models"
@@ -62,9 +61,7 @@ func (app *application) getPlayer(w http.ResponseWriter, r *http.Request) {
 	app.json(w, res)
 }
 
-func (app *application) crawlPlayers(w http.ResponseWriter, r *http.Request) {
-	start := time.Now()
-	defer fmt.Printf("Successfully crawled liquipedia players. Elapsed time: %v\n", time.Since(start))
+func (app *application) initPlayerCrawler(w http.ResponseWriter, r *http.Request) {
 	regionFound := false
 	region := r.URL.Query().Get("region")
 	regions := [4]string{"Europe", "US", "Asia", "Korea"}
@@ -80,24 +77,35 @@ func (app *application) crawlPlayers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	players, err := crawlers.LiquipediaPlayers(region)
+	res, err := app.crawlPlayers(region)
+
 	if err != nil {
 		app.serverError(w, err)
 		return
 	}
 
+	app.json(w, res)
+}
+
+func (app *application) crawlPlayers(region string) (string, error) {
+	start := time.Now()
+	defer app.infoLog.Printf("Successfully crawled liquipedia players. Elapsed time: %v\n", time.Since(start))
+
+	players, err := crawlers.LiquipediaPlayers(region)
+	if err != nil {
+		return "", err
+	}
+
 	if len(players) == 0 {
-		app.json(w, "No players found")
-		return
+		return "", err
 	}
 
 	rowCnt, err := app.players.InsertMany(players)
 	if err != nil {
-		app.serverError(w, err)
-		return
+		return "", err
 	}
 	rowCntStr := strconv.Itoa(int(rowCnt))
 	res := "Rows affected: " + rowCntStr
 
-	app.json(w, res)
+	return res, nil
 }
