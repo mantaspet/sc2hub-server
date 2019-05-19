@@ -73,6 +73,6 @@ func (app *application) logTrace(err error) {
 func (app *application) genericPreflightHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 	w.Header().Set("Access-Control-Allow-Origin", app.origin)
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Token")
 	w.WriteHeader(http.StatusOK)
 }

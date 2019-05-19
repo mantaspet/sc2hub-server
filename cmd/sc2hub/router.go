@@ -59,7 +59,10 @@ func (app *application) router() chi.Router {
 		r.Get("/app-access-token", app.getTwitchAppAccessToken)
 	})
 
-	r.Post("/auth/token", app.getAccessToken)
+	r.Route("/auth", func(r chi.Router) {
+		r.Post("/token", app.getAccessToken)
+		r.Options("/*", app.genericPreflightHandler)
+	})
 
 	return r
 }

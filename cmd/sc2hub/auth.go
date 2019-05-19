@@ -41,7 +41,7 @@ func (app *application) isAuthenticated(endpoint func(w http.ResponseWriter, r *
 			})
 
 			if err != nil {
-				app.clientError(w, http.StatusBadRequest, err)
+				app.clientError(w, http.StatusUnauthorized, err)
 			}
 
 			if token.Valid {
