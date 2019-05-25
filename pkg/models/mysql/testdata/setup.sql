@@ -99,8 +99,8 @@ create table players
     image_url text null,
     stream_url text null,
     is_retired tinyint(1) default 0 not null,
-    constraint players_player_id_uindex
-        unique (player_id)
+    constraint players_player_id_name_uindex
+        unique (player_id, name(64))
 );
 
 create table player_articles
