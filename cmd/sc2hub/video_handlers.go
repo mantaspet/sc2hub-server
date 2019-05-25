@@ -136,7 +136,7 @@ func (app *application) queryVideoAPIs() (string, error) {
 		return "", nil
 	}
 
-	players, err := app.players.SelectAllPlayerIDs()
+	players, err := app.players.SelectAllPlayerIDsAndIDs()
 	if err != nil {
 		return "", nil
 	}

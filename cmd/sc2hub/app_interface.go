@@ -33,7 +33,8 @@ type application struct {
 	players interface {
 		SelectPage(fromID int, query string) ([]*models.Player, error)
 		SelectOne(id int) (*models.Player, error)
-		SelectAllPlayerIDs() ([]*models.Player, error)
+		SelectAllPlayerIDs() ([]string, error)
+		SelectAllPlayerIDsAndIDs() ([]*models.Player, error)
 		InsertMany(players []models.Player) (int64, error)
 		InsertPlayerVideos(playerVideos []models.PlayerVideo) (int64, error)
 		InsertPlayerArticles(playerArticles []models.PlayerArticle) (int64, error)

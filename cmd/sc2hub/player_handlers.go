@@ -61,6 +61,16 @@ func (app *application) getPlayer(w http.ResponseWriter, r *http.Request) {
 	app.json(w, res)
 }
 
+func (app *application) getAllPlayerIDs(w http.ResponseWriter, r *http.Request) {
+	res, err := app.players.SelectAllPlayerIDs()
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	app.json(w, res)
+}
+
 func (app *application) initPlayerCrawler(w http.ResponseWriter, r *http.Request) {
 	regionFound := false
 	region := r.URL.Query().Get("region")

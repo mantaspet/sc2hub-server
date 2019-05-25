@@ -76,7 +76,33 @@ func (m *PlayerModel) SelectOne(id int) (*models.Player, error) {
 	return p, nil
 }
 
-func (m *PlayerModel) SelectAllPlayerIDs() ([]*models.Player, error) {
+func (m *PlayerModel) SelectAllPlayerIDs() ([]string, error) {
+	stmt := `SELECT player_id FROM players`
+
+	rows, err := m.DB.Query(stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	playerIDs := []string{}
+	for rows.Next() {
+		p := ""
+		err := rows.Scan(&p)
+		if err != nil {
+			return nil, err
+		}
+		playerIDs = append(playerIDs, p)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	return playerIDs, nil
+}
+
+func (m *PlayerModel) SelectAllPlayerIDsAndIDs() ([]*models.Player, error) {
 	stmt := `SELECT id, player_id FROM players`
 
 	rows, err := m.DB.Query(stmt)

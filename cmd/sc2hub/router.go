@@ -45,6 +45,7 @@ func (app *application) router() chi.Router {
 	r.Route("/players", func(r chi.Router) {
 		r.Get("/", app.getAllPlayers)
 		r.Get("/{id}", app.getPlayer)
+		r.Get("/ids", app.getAllPlayerIDs)
 		r.Get("/crawl", isAuthenticated(app, app.initPlayerCrawler))
 		r.Get("/{id}/videos", app.getVideosByPlayer)
 		r.Get("/{id}/articles", app.getArticlesByPlayer)

@@ -123,7 +123,7 @@ func (app *application) crawlArticles() (string, error) {
 	}
 
 	// Select all player IDs for matching against crawled article titles and excerpts
-	players, err := app.players.SelectAllPlayerIDs()
+	players, err := app.players.SelectAllPlayerIDsAndIDs()
 	if err != nil {
 		return "", err
 	}
