@@ -42,8 +42,6 @@ func queryArticlesPage(db *sql.DB, stmt string, pivotID int, pageSize int, from 
 	}
 	stmt += " ORDER BY articles.published_at DESC LIMIT ?,?"
 	valueArgs = append(valueArgs, from, pageSize+1)
-	fmt.Println(stmt)
-	fmt.Println(valueArgs)
 
 	rows, err := db.Query(stmt, valueArgs...)
 	if err != nil {
