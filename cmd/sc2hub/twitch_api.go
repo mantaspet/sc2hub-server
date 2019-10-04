@@ -58,7 +58,7 @@ func (app *application) getTwitchAccessToken() error {
 	return nil
 }
 
-func (app *application) getTwitchVideos(channel *models.Channel) ([]*models.Video, error) {
+func (app *application) getTwitchVideosByChannel(channel *models.Channel) ([]*models.Video, error) {
 	url := "https://api.twitch.tv/helix/videos?user_id=" + channel.ID
 
 	req, _ := http.NewRequest("GET", url, nil)
@@ -113,6 +113,56 @@ func (app *application) getTwitchVideos(channel *models.Channel) ([]*models.Vide
 	}
 
 	return videos, nil
+}
+
+func (app *application) getTwitchVideos(videos []*models.Video) ([]*models.Video, error) {
+	url := "https://api.twitch.tv/helix/videos?"
+	for _, v := range videos {
+		url += "id=" + v.ID + "&"
+	}
+
+	req, _ := http.NewRequest("GET", url, nil)
+	req.Header.Set("Authorization", "Bearer "+app.twitchAccessToken)
+	res, err := app.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	if res.StatusCode == http.StatusUnauthorized {
+		res, err = app.reauthenticateAndRepeatTwitchRequest(req)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	type Response struct {
+		Data       []TwitchVideo
+		Pagination interface{}
+	}
+
+	var data Response
+	defer res.Body.Close()
+	err = json.NewDecoder(res.Body).Decode(&data)
+	if err != nil {
+		return nil, err
+	}
+
+	var updatedVideos []*models.Video
+	for _, v := range data.Data {
+		video := &models.Video{
+			ID:           v.ID,
+			PlatformID:   1,
+			Title:        v.Title,
+			Duration:     v.Duration,
+			ThumbnailURL: v.ThumbnailURL,
+			ViewCount:    v.ViewCount,
+			Type:         v.Type,
+			UpdatedAt:    time.Now(),
+		}
+		updatedVideos = append(updatedVideos, video)
+	}
+
+	return updatedVideos, nil
 }
 
 var getTwitchChannelDataByLogin = func(login string, httpClient *http.Client) (models.Channel, error) {

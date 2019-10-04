@@ -16,7 +16,7 @@ func parseVideoRows(rows *sql.Rows) ([]*models.Video, error) {
 	for rows.Next() {
 		v := &models.Video{}
 		err := rows.Scan(&v.ID, &v.EventCategoryID, &v.PlatformID, &v.ChannelID, &v.Title, &v.Duration,
-			&v.ThumbnailURL, &v.ViewCount, &v.CreatedAt)
+			&v.ThumbnailURL, &v.ViewCount, &v.CreatedAt, &v.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -47,7 +47,7 @@ func queryVideosPage(db *sql.DB, stmt string, pivotID int, pageSize int, from in
 
 func (m *VideoModel) SelectPage(pageSize int, from int, query string) ([]*models.Video, error) {
 	stmt := `SELECT id, COALESCE(event_category_id, 0), platform_id, COALESCE(channel_id, ''), title, duration,
-			COALESCE(thumbnail_url, ''), view_count, created_at
+			COALESCE(thumbnail_url, ''), view_count, created_at, updated_at
 	  	FROM videos
 	  	WHERE title LIKE ?
 	  	ORDER BY created_at DESC
@@ -58,7 +58,7 @@ func (m *VideoModel) SelectPage(pageSize int, from int, query string) ([]*models
 
 func (m *VideoModel) SelectRecent() ([]*models.Video, error) {
 	stmt := `SELECT id, COALESCE(event_category_id, 0), platform_id, COALESCE(channel_id, ''), title, duration,
-			COALESCE(thumbnail_url, ''), view_count, created_at
+			COALESCE(thumbnail_url, ''), view_count, created_at, updated_at
 	  	FROM videos
 		WHERE '1'<>?
 	  	ORDER BY created_at DESC 
@@ -72,7 +72,7 @@ func (m *VideoModel) SelectRecent() ([]*models.Video, error) {
 
 func (m *VideoModel) SelectEventBroadcasts(categoryID int, date string) ([]*models.Video, error) {
 	stmt := `SELECT id, COALESCE(event_category_id, 0), platform_id, COALESCE(channel_id, ''), title, duration,
-			COALESCE(thumbnail_url, ''), created_at
+			COALESCE(thumbnail_url, ''), created_at, updated_at
 	  	FROM videos
 	  	WHERE event_category_id=? AND created_at LIKE ? AND type='archive'
 		ORDER BY created_at DESC
@@ -83,7 +83,7 @@ func (m *VideoModel) SelectEventBroadcasts(categoryID int, date string) ([]*mode
 
 func (m *VideoModel) SelectByCategory(pageSize int, from int, query string, categoryID int) ([]*models.Video, error) {
 	stmt := `SELECT id, COALESCE(event_category_id, 0), platform_id, COALESCE(channel_id, ''), title, duration,
-			COALESCE(thumbnail_url, ''), view_count, created_at
+			COALESCE(thumbnail_url, ''), view_count, created_at, updated_at
 	  	FROM videos
 	  	WHERE event_category_id=? AND title LIKE ?
 		ORDER BY created_at DESC
@@ -95,7 +95,8 @@ func (m *VideoModel) SelectByCategory(pageSize int, from int, query string, cate
 func (m *VideoModel) SelectByPlayer(pageSize int, from int, query string, playerID int) ([]*models.Video, error) {
 	stmt := `
 		SELECT videos.id, COALESCE(videos.event_category_id, 0), videos.platform_id, COALESCE(videos.channel_id, ''),
-			videos.title, videos.duration, COALESCE(videos.thumbnail_url, ''), videos.view_count, videos.created_at
+			videos.title, videos.duration, COALESCE(videos.thumbnail_url, ''), videos.view_count, 
+			videos.created_at, videos.updated_at
 		FROM videos
 		INNER JOIN player_videos
 		ON player_videos.video_id=videos.id
@@ -131,7 +132,6 @@ func (m *VideoModel) InsertOrUpdateMany(videos []*models.Video) (int64, error) {
 			duration=VALUES(duration),
 			thumbnail_url=VALUES(thumbnail_url),
 			view_count=VALUES(view_count),
-			created_at=VALUES(created_at),
 			updated_at=VALUES(updated_at);`, strings.Join(valueStrings, ","))
 
 	res, err := m.DB.Exec(stmt, valueArgs...)

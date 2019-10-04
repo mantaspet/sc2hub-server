@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func getPaginatedVideosResponse(videos []*models.Video, cursor int) models.PaginatedVideos {
@@ -42,6 +43,7 @@ func (app *application) getAllVideos(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res := getPaginatedVideosResponse(videos, from+models.VideoPageLength)
+	go app.updateVideoMetadata(videos)
 	app.json(w, res)
 }
 
@@ -60,6 +62,7 @@ func (app *application) getVideosByPlayer(w http.ResponseWriter, r *http.Request
 	}
 
 	res := getPaginatedVideosResponse(videos, from+models.VideoPageLength)
+	go app.updateVideoMetadata(videos)
 	app.json(w, res)
 }
 
@@ -78,6 +81,7 @@ func (app *application) getVideosByCategory(w http.ResponseWriter, r *http.Reque
 	}
 
 	res := getPaginatedVideosResponse(videos, from+models.VideoPageLength)
+	go app.updateVideoMetadata(videos)
 	app.json(w, res)
 }
 
@@ -94,6 +98,7 @@ func (app *application) getEventBroadcasts(w http.ResponseWriter, r *http.Reques
 	}
 
 	res := getPaginatedVideosResponse(videos, 0)
+	go app.updateVideoMetadata(videos)
 	app.json(w, res)
 }
 
@@ -117,7 +122,7 @@ func (app *application) queryVideoAPIs() (string, error) {
 	var videosToInsert []*models.Video
 	for _, channel := range channels {
 		if channel.PlatformID == 1 {
-			videos, err = app.getTwitchVideos(channel)
+			videos, err = app.getTwitchVideosByChannel(channel)
 		} else if channel.PlatformID == 2 {
 			videos, err = app.getYoutubeVideos(channel)
 		}
@@ -163,4 +168,33 @@ func (app *application) queryVideoAPIs() (string, error) {
 	res := "Rows affected: " + rowCntStr
 
 	return res, nil
+}
+
+/**
+Get updated metadata (mainly for view count) from video APIs
+if it's been 2 hours since the last update for every video.
+Current implementation calls this function with "go", to avoid making the user wait.
+Might want to rethink this, because it does end up returning outdated info.
+*/
+func (app *application) updateVideoMetadata(videos []*models.Video) {
+	var twitchVideosToUpdate []*models.Video
+	for _, v := range videos {
+		if time.Now().After(v.UpdatedAt.Add(time.Hour*2)) && v.PlatformID == 1 {
+			twitchVideosToUpdate = append(twitchVideosToUpdate, v)
+		}
+	}
+
+	if len(twitchVideosToUpdate) == 0 {
+		return
+	}
+
+	updatedVideos, err := app.getTwitchVideos(twitchVideosToUpdate)
+	if err != nil {
+		app.errorLog.Println("failed to update video metadata: " + err.Error())
+	}
+
+	_, err = app.videos.InsertOrUpdateMany(updatedVideos)
+	if err != nil {
+		app.errorLog.Println("failed to update video metadata: " + err.Error())
+	}
 }
