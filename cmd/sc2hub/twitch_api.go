@@ -21,7 +21,7 @@ type TwitchVideo struct {
 	URL          string `json:"url"`
 	ThumbnailURL string `json:"thumbnail_url"`
 	Viewable     string `json:"viewable"`
-	ViewCount    int    `json:"view_count"`
+	ViewCount    uint   `json:"view_count"`
 	Language     string `json:"language"`
 	Type         string `json:"type"`
 	Duration     string `json:"duration"`
@@ -36,7 +36,7 @@ type TwitchChannel struct {
 	Description     string `json:"description"`
 	ProfileImageURL string `json:"profile_image_url"`
 	OfflineImageURL string `json:"offline_image_url"`
-	ViewCount       int    `json:"view_count"`
+	ViewCount       uint   `json:"view_count"`
 }
 
 func (app *application) getTwitchAccessToken() error {
@@ -104,8 +104,10 @@ func (app *application) getTwitchVideos(channel *models.Channel) ([]*models.Vide
 			Title:           v.Title,
 			Duration:        v.Duration,
 			ThumbnailURL:    v.ThumbnailURL,
+			ViewCount:       v.ViewCount,
 			Type:            v.Type,
 			CreatedAt:       createdAt,
+			UpdatedAt:       time.Now(),
 		}
 		videos = append(videos, video)
 	}
