@@ -15,8 +15,10 @@ type Video struct {
 	Title           string
 	Duration        string
 	ThumbnailURL    string
-	CreatedAt       time.Time
+	ViewCount       uint
 	Type            string
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
 }
 
 type PaginatedVideos struct {
@@ -31,6 +33,7 @@ func (v *Video) MarshalJSON() ([]byte, error) {
 		Title        string
 		Duration     string
 		ThumbnailURL string
+		ViewCount    uint
 		CreatedAt    time.Time
 	}{
 		ID:           v.ID,
@@ -38,6 +41,7 @@ func (v *Video) MarshalJSON() ([]byte, error) {
 		Title:        v.Title,
 		Duration:     v.Duration,
 		ThumbnailURL: v.ThumbnailURL,
+		ViewCount:    v.ViewCount,
 		CreatedAt:    v.CreatedAt,
 	})
 }
