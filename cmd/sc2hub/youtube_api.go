@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/mantaspet/sc2hub-server/pkg/models"
 	"net/http"
+	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -28,7 +29,7 @@ type YoutubeVideo struct {
 
 func (app *application) getYoutubeVideos(channel *models.Channel) ([]*models.Video, error) {
 	url := "https://www.googleapis.com/youtube/v3/search" +
-		"?key=AIzaSyA_NiC_FDPJZsLicC9mkZTmQ1o9rx_tcbs" +
+		"?key=" + os.Getenv("YOUTUBE_API_KEY") +
 		"&channelId=" + channel.ID +
 		"&type=video" +
 		"&part=snippet,id" +
@@ -86,7 +87,7 @@ func (app *application) getYoutubeVideos(channel *models.Channel) ([]*models.Vid
 var getYoutubeChannelData = func(login string, id string, httpClient *http.Client) (models.Channel, error) {
 	var yc models.Channel
 	url := "https://www.googleapis.com/youtube/v3/channels" +
-		"?key=AIzaSyA2vHJcCFGgAKJv-g_l81lcNHxic9V4s3Y" +
+		"?key=" + os.Getenv("YOUTUBE_API_KEY") +
 		"&part=id,snippet" +
 		"&fields=items(id,snippet(title,customUrl,thumbnails(default)))"
 

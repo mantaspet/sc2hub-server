@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"flag"
 	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/joho/godotenv/autoload"
 	"github.com/mantaspet/sc2hub-server/pkg/models/mysql"
 	"golang.org/x/crypto/acme/autocert"
 	"log"

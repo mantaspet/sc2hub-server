@@ -2,6 +2,8 @@
 
 Server side repository for sc2hub.net
 
+Copy .env.template to .env and fill in values
+
 Start the app:
 
     go run ./cmd/sc2hub -secret {JWT_CLIENT_SECRET}
