@@ -32,8 +32,8 @@ func (app *application) initQueryVideos() {
 }
 
 func (app *application) initCrawlEvents() {
-	year := time.Now().UTC().Format("2006")
-	month := time.Now().UTC().Format("01")
+	year := time.Now().Format("2006")
+	month := time.Now().Format("01")
 	nextMonth := time.Now().AddDate(0, 1, 0).UTC().Format("01")
 
 	res, err := app.crawlEvents(year, month)

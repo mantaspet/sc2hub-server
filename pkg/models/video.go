@@ -13,9 +13,9 @@ type Video struct {
 	PlatformID      int
 	ChannelID       string
 	Title           string
-	Duration        string
+	Duration        int
+	ViewCount       int
 	ThumbnailURL    string
-	ViewCount       uint
 	Type            string
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
@@ -31,17 +31,17 @@ func (v *Video) MarshalJSON() ([]byte, error) {
 		ID           string
 		PlatformID   int
 		Title        string
-		Duration     string
+		Duration     int
+		ViewCount    int
 		ThumbnailURL string
-		ViewCount    uint
 		CreatedAt    time.Time
 	}{
 		ID:           v.ID,
 		PlatformID:   v.PlatformID,
 		Title:        v.Title,
 		Duration:     v.Duration,
-		ThumbnailURL: v.ThumbnailURL,
 		ViewCount:    v.ViewCount,
+		ThumbnailURL: v.ThumbnailURL,
 		CreatedAt:    v.CreatedAt,
 	})
 }

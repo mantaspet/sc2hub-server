@@ -107,7 +107,7 @@ func (app *application) crawlPlayers(region string) (string, error) {
 	}
 
 	if len(players) == 0 {
-		return "", err
+		return "No players found", err
 	}
 
 	rowCnt, err := app.players.InsertMany(players)

@@ -64,10 +64,10 @@ func (app *application) initEventCrawler(w http.ResponseWriter, r *http.Request)
 	year := r.URL.Query().Get("year")
 	month := r.URL.Query().Get("month")
 	if len(month) != 2 {
-		month = time.Now().UTC().Format("01")
+		month = time.Now().Format("01")
 	}
 	if len(year) != 4 {
-		year = time.Now().UTC().Format("2006")
+		year = time.Now().Format("2006")
 	}
 
 	res, err := app.crawlEvents(year, month)
@@ -86,6 +86,10 @@ func (app *application) crawlEvents(year string, month string) (string, error) {
 	events, err := crawlers.TeamliquidEvents(year, month)
 	if err != nil {
 		return "", err
+	}
+
+	if len(events) == 0 {
+		return "No events found", nil
 	}
 
 	events, err = app.eventCategories.AssignToEvents(events)

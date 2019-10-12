@@ -122,19 +122,18 @@ create table videos
     platform_id int unsigned not null,
     channel_id varchar(64) null,
     title varchar(255) not null,
-    duration varchar(16) default '' not null,
     thumbnail_url text default '' not null,
     view_count int unsigned default 0 not null,
-    type varchar(64) default '' null,
+    duration int unsigned default 0 not null,
     created_at datetime default current_timestamp() not null,
     updated_at datetime default current_timestamp() not null,
+    type varchar(64) default '' null,
     constraint videos_channels_id_fk
         foreign key (channel_id) references sc2hub.channels (id)
             on delete set null,
     constraint videos_event_categories_id_fk
         foreign key (event_category_id) references sc2hub.event_categories (id)
 );
-
 
 create table player_videos
 (

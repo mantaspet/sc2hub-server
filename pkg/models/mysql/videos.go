@@ -146,3 +146,19 @@ func (m *VideoModel) InsertOrUpdateMany(videos []*models.Video) (int64, error) {
 
 	return rowCnt, nil
 }
+
+func (m *VideoModel) UpdateMetadata(videos []*models.Video) error {
+	stmt, err := m.DB.Prepare("UPDATE videos SET title=?, thumbnail_url=?, view_count=?, updated_at=? WHERE id=?;")
+	if err != nil {
+		return err
+	}
+
+	for _, v := range videos {
+		_, err := stmt.Exec(v.Title, v.ThumbnailURL, v.ViewCount, v.UpdatedAt, v.ID)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

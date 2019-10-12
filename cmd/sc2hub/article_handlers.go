@@ -106,6 +106,10 @@ func (app *application) crawlArticles() (string, error) {
 
 	crawledArticles = append(crawledArticles, teamLiquidArticles...)
 
+	if len(crawledArticles) == 0 {
+		return "No articles found", nil
+	}
+
 	rowCnt, err := app.articles.InsertMany(crawledArticles)
 	if err != nil {
 		return "", err
@@ -159,14 +163,18 @@ func (app *application) crawlArticles() (string, error) {
 		}
 	}
 
-	_, err = app.players.InsertPlayerArticles(playerArticles)
-	if err != nil {
-		app.errorLog.Println(err)
+	if len(playerArticles) > 0 {
+		_, err = app.players.InsertPlayerArticles(playerArticles)
+		if err != nil {
+			app.errorLog.Println(err)
+		}
 	}
 
-	_, err = app.eventCategories.InsertEventCategoryArticles(ecArticles)
-	if err != nil {
-		app.errorLog.Println(err)
+	if len(ecArticles) > 0 {
+		_, err = app.eventCategories.InsertEventCategoryArticles(ecArticles)
+		if err != nil {
+			app.errorLog.Println(err)
+		}
 	}
 
 	return res, nil

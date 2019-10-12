@@ -115,20 +115,20 @@ func (app *application) initVideoQuerying(w http.ResponseWriter, r *http.Request
 func (app *application) queryVideoAPIs() (string, error) {
 	channels, err := app.channels.SelectFromAllCategories(0)
 	if err != nil {
-		return "", err
+		return err.Error(), err
 	}
 
 	var videos []*models.Video
 	var videosToInsert []*models.Video
 	for _, channel := range channels {
 		if channel.PlatformID == 1 {
-			videos, err = app.getTwitchVideosByChannel(channel)
+			videos, err = app.getTwitchVideos(channel)
 		} else if channel.PlatformID == 2 {
 			videos, err = app.getYoutubeVideos(channel)
 		}
 
 		if err != nil {
-			return "", nil
+			return err.Error(), err
 		}
 
 		if len(videos) > 0 {
@@ -136,14 +136,18 @@ func (app *application) queryVideoAPIs() (string, error) {
 		}
 	}
 
+	if len(videosToInsert) == 0 {
+		return "No videos found", nil
+	}
+
 	rowCnt, err := app.videos.InsertOrUpdateMany(videosToInsert)
 	if err != nil {
-		return "", nil
+		return err.Error(), err
 	}
 
 	players, err := app.players.SelectAllPlayerIDsAndIDs()
 	if err != nil {
-		return "", nil
+		return err.Error(), err
 	}
 
 	var playerVideos []models.PlayerVideo
@@ -159,15 +163,17 @@ func (app *application) queryVideoAPIs() (string, error) {
 			}
 		}
 	}
-	_, err = app.players.InsertPlayerVideos(playerVideos)
-	if err != nil {
-		return "", nil
+	if len(playerVideos) > 0 {
+		_, err = app.players.InsertPlayerVideos(playerVideos)
+		if err != nil {
+			return err.Error(), err
+		}
 	}
 
 	rowCntStr := strconv.Itoa(int(rowCnt))
 	res := "Rows affected: " + rowCntStr
 
-	return res, nil
+	return res, err
 }
 
 /**
@@ -178,23 +184,40 @@ Might want to rethink this, because it does end up returning outdated info.
 */
 func (app *application) updateVideoMetadata(videos []*models.Video) {
 	var twitchVideosToUpdate []*models.Video
+	var youtubeVideosToUpdate []*models.Video
 	for _, v := range videos {
-		if time.Now().After(v.UpdatedAt.Add(time.Hour*2)) && v.PlatformID == 1 {
-			twitchVideosToUpdate = append(twitchVideosToUpdate, v)
+		if time.Now().After(v.UpdatedAt.Add(time.Hour * 2)) {
+			if v.PlatformID == 1 {
+				twitchVideosToUpdate = append(twitchVideosToUpdate, v)
+			} else if v.PlatformID == 2 {
+				youtubeVideosToUpdate = append(youtubeVideosToUpdate, v)
+			}
 		}
 	}
 
-	if len(twitchVideosToUpdate) == 0 {
-		return
+	var updatedVideos []*models.Video
+	if len(twitchVideosToUpdate) > 0 {
+		updatedTwitchVideos, err := app.getExistingTwitchVideoData(twitchVideosToUpdate)
+		if err != nil {
+			app.errorLog.Println(err.Error())
+		} else {
+			updatedVideos = append(updatedVideos, updatedTwitchVideos...)
+		}
 	}
 
-	updatedVideos, err := app.getTwitchVideos(twitchVideosToUpdate)
-	if err != nil {
-		app.errorLog.Println("failed to update video metadata: " + err.Error())
+	if len(youtubeVideosToUpdate) > 0 {
+		updatedYoutubeVideos, err := app.getExistingYoutubeVideoData(youtubeVideosToUpdate)
+		if err != nil {
+			app.errorLog.Println(err.Error())
+		} else {
+			updatedVideos = append(updatedVideos, updatedYoutubeVideos...)
+		}
 	}
 
-	_, err = app.videos.InsertOrUpdateMany(updatedVideos)
-	if err != nil {
-		app.errorLog.Println("failed to update video metadata: " + err.Error())
+	if len(updatedVideos) > 0 {
+		err := app.videos.UpdateMetadata(updatedVideos)
+		if err != nil {
+			app.errorLog.Println(err.Error())
+		}
 	}
 }

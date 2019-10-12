@@ -21,7 +21,7 @@ type TwitchVideo struct {
 	URL          string `json:"url"`
 	ThumbnailURL string `json:"thumbnail_url"`
 	Viewable     string `json:"viewable"`
-	ViewCount    uint   `json:"view_count"`
+	ViewCount    int    `json:"view_count"`
 	Language     string `json:"language"`
 	Type         string `json:"type"`
 	Duration     string `json:"duration"`
@@ -36,7 +36,7 @@ type TwitchChannel struct {
 	Description     string `json:"description"`
 	ProfileImageURL string `json:"profile_image_url"`
 	OfflineImageURL string `json:"offline_image_url"`
-	ViewCount       uint   `json:"view_count"`
+	ViewCount       int    `json:"view_count"`
 }
 
 func (app *application) getTwitchAccessToken() error {
@@ -50,6 +50,7 @@ func (app *application) getTwitchAccessToken() error {
 	appCredentials := map[string]interface{}{}
 	err = json.NewDecoder(res.Body).Decode(&appCredentials)
 	if err != nil {
+		app.errorLog.Println(err.Error())
 		return err
 	}
 
@@ -58,13 +59,15 @@ func (app *application) getTwitchAccessToken() error {
 	return nil
 }
 
-func (app *application) getTwitchVideosByChannel(channel *models.Channel) ([]*models.Video, error) {
+// Gets the latest Twitch video data from a given channel
+func (app *application) getTwitchVideos(channel *models.Channel) ([]*models.Video, error) {
 	url := "https://api.twitch.tv/helix/videos?user_id=" + channel.ID
 
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Set("Authorization", "Bearer "+app.twitchAccessToken)
 	res, err := app.httpClient.Do(req)
 	if err != nil {
+		app.errorLog.Println(err.Error())
 		return nil, err
 	}
 
@@ -92,17 +95,29 @@ func (app *application) getTwitchVideosByChannel(channel *models.Channel) ([]*mo
 		if strings.Contains(strings.ToLower(v.Title), channel.Pattern) != true {
 			continue
 		}
-		createdAt, err := time.Parse("2006-01-02T15:04:05Z", v.CreatedAt)
+
+		createdAt, err := time.Parse("2006-01-02T15:04:05Z", v.PublishedAt)
 		if err != nil {
 			createdAt = time.Now()
 		}
+
+		// twitch duration looks like this: 1h25m30s
+		var durationInSeconds int
+		duration, err := time.ParseDuration(strings.ToLower(v.Duration))
+
+		if err != nil {
+			durationInSeconds = 0
+		} else {
+			durationInSeconds = int(duration.Seconds())
+		}
+
 		video := &models.Video{
 			ID:              v.ID,
 			PlatformID:      1,
 			EventCategoryID: channel.EventCategoryID,
 			ChannelID:       channel.ID,
 			Title:           v.Title,
-			Duration:        v.Duration,
+			Duration:        durationInSeconds,
 			ThumbnailURL:    v.ThumbnailURL,
 			ViewCount:       v.ViewCount,
 			Type:            v.Type,
@@ -115,7 +130,9 @@ func (app *application) getTwitchVideosByChannel(channel *models.Channel) ([]*mo
 	return videos, nil
 }
 
-func (app *application) getTwitchVideos(videos []*models.Video) ([]*models.Video, error) {
+// Gets updated video data of videos already saved in database.
+// Returns only a subset of video data, for use with app.videos.UpdateMetadata.
+func (app *application) getExistingTwitchVideoData(videos []*models.Video) ([]*models.Video, error) {
 	url := "https://api.twitch.tv/helix/videos?"
 	for _, v := range videos {
 		url += "id=" + v.ID + "&"
@@ -125,6 +142,7 @@ func (app *application) getTwitchVideos(videos []*models.Video) ([]*models.Video
 	req.Header.Set("Authorization", "Bearer "+app.twitchAccessToken)
 	res, err := app.httpClient.Do(req)
 	if err != nil {
+		app.errorLog.Println(err.Error())
 		return nil, err
 	}
 
@@ -151,17 +169,13 @@ func (app *application) getTwitchVideos(videos []*models.Video) ([]*models.Video
 	for _, v := range data.Data {
 		video := &models.Video{
 			ID:           v.ID,
-			PlatformID:   1,
 			Title:        v.Title,
-			Duration:     v.Duration,
 			ThumbnailURL: v.ThumbnailURL,
 			ViewCount:    v.ViewCount,
-			Type:         v.Type,
 			UpdatedAt:    time.Now(),
 		}
-		updatedVideos = append(updatedVideos, video)
+		videos = append(videos, video)
 	}
-
 	return updatedVideos, nil
 }
 
@@ -203,6 +217,7 @@ func (app *application) reauthenticateAndRepeatTwitchRequest(req *http.Request) 
 	req.Header.Set("Authorization", "Bearer "+app.twitchAccessToken)
 	res, err := app.httpClient.Do(req)
 	if err != nil {
+		app.errorLog.Println(err.Error())
 		return nil, err
 	}
 	return res, nil
