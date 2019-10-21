@@ -5,7 +5,6 @@ import (
 	"errors"
 	"github.com/mantaspet/sc2hub-server/pkg/models"
 	"net/http"
-	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -43,7 +42,7 @@ func (app *application) getYoutubeVideoData(videos []YoutubeSearchResult) ([]You
 	var url strings.Builder
 
 	url.WriteString("https://www.googleapis.com/youtube/v3/videos" +
-		"?key=" + os.Getenv("YOUTUBE_API_KEY") +
+		"?key=" + flgYoutubeApiKey +
 		"&part=snippet,contentDetails,statistics" +
 		"&fields=items(id," +
 		"snippet(publishedAt,title,liveBroadcastContent,thumbnails(medium(url)))," +
@@ -91,7 +90,7 @@ func parseYoutubeVideoDuration(durationString string) int {
 // Gets the latest Youtube video data from a given channel
 func (app *application) getYoutubeVideos(channel *models.Channel) ([]*models.Video, error) {
 	url := "https://www.googleapis.com/youtube/v3/search" +
-		"?key=" + os.Getenv("YOUTUBE_API_KEY") +
+		"?key=" + flgYoutubeApiKey +
 		"&channelId=" + channel.ID +
 		"&type=video" +
 		"&part=id" +
@@ -170,7 +169,7 @@ func (app *application) getExistingYoutubeVideoData(videos []*models.Video) ([]*
 	var url strings.Builder
 
 	url.WriteString("https://www.googleapis.com/youtube/v3/videos" +
-		"?key=" + os.Getenv("YOUTUBE_API_KEY") +
+		"?key=" + flgYoutubeApiKey +
 		"&part=snippet,contentDetails,statistics" +
 		"&fields=items(id," +
 		"snippet(title,thumbnails(medium(url)))," +
@@ -222,7 +221,7 @@ func (app *application) getExistingYoutubeVideoData(videos []*models.Video) ([]*
 var getYoutubeChannelData = func(login string, id string, httpClient *http.Client) (models.Channel, error) {
 	var yc models.Channel
 	url := "https://www.googleapis.com/youtube/v3/channels" +
-		"?key=" + os.Getenv("YOUTUBE_API_KEY") +
+		"?key=" + flgYoutubeApiKey +
 		"&part=id,snippet" +
 		"&fields=items(id,snippet(title,customUrl,thumbnails(default)))"
 

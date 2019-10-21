@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"flag"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/joho/godotenv"
 	"github.com/mantaspet/sc2hub-server/pkg/models/mysql"
 	"golang.org/x/crypto/acme/autocert"
 	"log"
@@ -15,11 +14,12 @@ import (
 )
 
 var (
-	flgProduction   = false
-	flgAddr         = ":443"
-	flgDsn          = ""
-	flgOrigin       = ""
-	flgClientSecret = ""
+	flgProduction    = false
+	flgAddr          = ":443"
+	flgDsn           = ""
+	flgOrigin        = ""
+	flgClientSecret  = ""
+	flgYoutubeApiKey = ""
 )
 
 func parseFlags() {
@@ -28,6 +28,7 @@ func parseFlags() {
 	flag.StringVar(&flgDsn, "dsn", "root:root@/sc2hub", "MySQL data source name")
 	flag.StringVar(&flgOrigin, "origin", "http://localhost:4200", "client origin")
 	flag.StringVar(&flgClientSecret, "secret", "", "JWT auth client secret")
+	flag.StringVar(&flgYoutubeApiKey, "youtube_key", "", "YouTube data API v3 key")
 	flag.Parse()
 }
 
@@ -45,11 +46,6 @@ func openDB(dsn string) (*sql.DB, error) {
 }
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-
 	parseFlags()
 	if flgClientSecret == "" {
 		log.Fatal("must specify a value for flag 'secret'")
