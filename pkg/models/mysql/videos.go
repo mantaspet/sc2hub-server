@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/mantaspet/sc2hub-server/pkg/models"
 	"strings"
+	"time"
 )
 
 type VideoModel struct {
@@ -148,13 +149,13 @@ func (m *VideoModel) InsertOrUpdateMany(videos []*models.Video) (int64, error) {
 }
 
 func (m *VideoModel) UpdateMetadata(videos []*models.Video) error {
-	stmt, err := m.DB.Prepare("UPDATE videos SET title=?, thumbnail_url=?, view_count=?, updated_at=? WHERE id=?;")
+	stmt, err := m.DB.Prepare("UPDATE videos SET title=?, thumbnail_url=?, duration=?, view_count=?, updated_at=? WHERE id=?;")
 	if err != nil {
 		return err
 	}
 
 	for _, v := range videos {
-		_, err := stmt.Exec(v.Title, v.ThumbnailURL, v.ViewCount, v.UpdatedAt, v.ID)
+		_, err := stmt.Exec(v.Title, v.ThumbnailURL, v.Duration, v.ViewCount, time.Now(), v.ID)
 		if err != nil {
 			return err
 		}

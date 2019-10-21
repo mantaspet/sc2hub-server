@@ -75,6 +75,19 @@ func (app *application) getYoutubeVideoData(videos []YoutubeSearchResult) ([]You
 	return data.Items, nil
 }
 
+func parseYoutubeVideoDuration(durationString string) int {
+	// youtube duration looks like this: PT1H25M30S
+	var durationInSeconds int
+	duration, err := time.ParseDuration(strings.ToLower(durationString[2:]))
+
+	if err != nil {
+		durationInSeconds = 0
+	} else {
+		durationInSeconds = int(duration.Seconds())
+	}
+	return durationInSeconds
+}
+
 // Gets the latest Youtube video data from a given channel
 func (app *application) getYoutubeVideos(channel *models.Channel) ([]*models.Video, error) {
 	url := "https://www.googleapis.com/youtube/v3/search" +
@@ -128,16 +141,6 @@ func (app *application) getYoutubeVideos(channel *models.Channel) ([]*models.Vid
 			createdAt = time.Now()
 		}
 
-		// youtube duration looks like this: PT1H25M30S
-		var durationInSeconds int
-		duration, err := time.ParseDuration(strings.ToLower(v.ContentDetails.Duration[2:]))
-
-		if err != nil {
-			durationInSeconds = 0
-		} else {
-			durationInSeconds = int(duration.Seconds())
-		}
-
 		viewCount, err := strconv.Atoi(v.Statistics.ViewCount)
 		if err != nil {
 			viewCount = 0
@@ -149,7 +152,7 @@ func (app *application) getYoutubeVideos(channel *models.Channel) ([]*models.Vid
 			EventCategoryID: channel.EventCategoryID,
 			ChannelID:       channel.ID,
 			Title:           v.Snippet.Title,
-			Duration:        durationInSeconds,
+			Duration:        parseYoutubeVideoDuration(v.ContentDetails.Duration),
 			ThumbnailURL:    v.Snippet.Thumbnails.Medium.Url,
 			ViewCount:       viewCount,
 			CreatedAt:       createdAt,
@@ -167,9 +170,10 @@ func (app *application) getExistingYoutubeVideoData(videos []*models.Video) ([]*
 
 	url.WriteString("https://www.googleapis.com/youtube/v3/videos" +
 		"?key=" + os.Getenv("YOUTUBE_API_KEY") +
-		"&part=snippet,statistics" +
+		"&part=snippet,contentDetails,statistics" +
 		"&fields=items(id," +
 		"snippet(title,thumbnails(medium(url)))," +
+		"contentDetails(duration)," +
 		"statistics(viewCount))" +
 		"&id=")
 
@@ -205,8 +209,8 @@ func (app *application) getExistingYoutubeVideoData(videos []*models.Video) ([]*
 			ID:           v.Id,
 			Title:        v.Snippet.Title,
 			ThumbnailURL: v.Snippet.Thumbnails.Medium.Url,
+			Duration:     parseYoutubeVideoDuration(v.ContentDetails.Duration),
 			ViewCount:    viewCount,
-			UpdatedAt:    time.Now(),
 		}
 		updatedVideos = append(updatedVideos, video)
 	}

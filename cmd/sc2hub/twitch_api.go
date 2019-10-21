@@ -59,6 +59,19 @@ func (app *application) getTwitchAccessToken() error {
 	return nil
 }
 
+func parseTwitchVideoDuration(durationString string) int {
+	// twitch duration looks like this: 1h25m30s
+	var durationInSeconds int
+	duration, err := time.ParseDuration(strings.ToLower(durationString))
+
+	if err != nil {
+		durationInSeconds = 0
+	} else {
+		durationInSeconds = int(duration.Seconds())
+	}
+	return durationInSeconds
+}
+
 // Gets the latest Twitch video data from a given channel
 func (app *application) getTwitchVideos(channel *models.Channel) ([]*models.Video, error) {
 	url := "https://api.twitch.tv/helix/videos?user_id=" + channel.ID
@@ -101,23 +114,13 @@ func (app *application) getTwitchVideos(channel *models.Channel) ([]*models.Vide
 			createdAt = time.Now()
 		}
 
-		// twitch duration looks like this: 1h25m30s
-		var durationInSeconds int
-		duration, err := time.ParseDuration(strings.ToLower(v.Duration))
-
-		if err != nil {
-			durationInSeconds = 0
-		} else {
-			durationInSeconds = int(duration.Seconds())
-		}
-
 		video := &models.Video{
 			ID:              v.ID,
 			PlatformID:      1,
 			EventCategoryID: channel.EventCategoryID,
 			ChannelID:       channel.ID,
 			Title:           v.Title,
-			Duration:        durationInSeconds,
+			Duration:        parseTwitchVideoDuration(v.Duration),
 			ThumbnailURL:    v.ThumbnailURL,
 			ViewCount:       v.ViewCount,
 			Type:            v.Type,
@@ -170,11 +173,11 @@ func (app *application) getExistingTwitchVideoData(videos []*models.Video) ([]*m
 		video := &models.Video{
 			ID:           v.ID,
 			Title:        v.Title,
+			Duration:     parseTwitchVideoDuration(v.Duration),
 			ThumbnailURL: v.ThumbnailURL,
 			ViewCount:    v.ViewCount,
-			UpdatedAt:    time.Now(),
 		}
-		videos = append(videos, video)
+		updatedVideos = append(updatedVideos, video)
 	}
 	return updatedVideos, nil
 }
