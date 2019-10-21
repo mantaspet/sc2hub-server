@@ -105,7 +105,8 @@ func (app *application) getTwitchVideos(channel *models.Channel) ([]*models.Vide
 
 	var videos []*models.Video
 	for _, v := range data.Data {
-		if strings.Contains(strings.ToLower(v.Title), channel.Pattern) != true {
+		lowercaseTitle := strings.ToLower(v.Title)
+		if !strings.Contains(lowercaseTitle, channel.Pattern) || strings.Contains(lowercaseTitle, "rerun") {
 			continue
 		}
 
