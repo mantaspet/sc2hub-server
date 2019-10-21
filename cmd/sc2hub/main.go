@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"flag"
 	_ "github.com/go-sql-driver/mysql"
-	_ "github.com/joho/godotenv/autoload"
+	"github.com/joho/godotenv"
 	"github.com/mantaspet/sc2hub-server/pkg/models/mysql"
 	"golang.org/x/crypto/acme/autocert"
 	"log"
@@ -45,6 +45,11 @@ func openDB(dsn string) (*sql.DB, error) {
 }
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	parseFlags()
 	if flgClientSecret == "" {
 		log.Fatal("must specify a value for flag 'secret'")
@@ -54,7 +59,6 @@ func main() {
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Llongfile)
 
-	var err error
 	db, err := openDB(flgDsn + "?parseTime=true")
 	if err != nil {
 		errorLog.Fatal(err)
