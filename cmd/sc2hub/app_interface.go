@@ -47,6 +47,7 @@ type application struct {
 		SelectByPlayer(pageSize int, from int, query string, playerID int) ([]*models.Video, error)
 		InsertOrUpdateMany(videos []*models.Video) (int64, error)
 		UpdateMetadata(videos []*models.Video) error
+		DeleteMany(videos []*models.Video) error
 	}
 	articles interface {
 		SelectPage(pageSize int, from int, query string) ([]*models.Article, error)

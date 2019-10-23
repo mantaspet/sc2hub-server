@@ -196,12 +196,14 @@ func (app *application) updateVideoMetadata(videos []*models.Video) {
 	}
 
 	var updatedVideos []*models.Video
+	var videosToDelete []*models.Video
 	if len(twitchVideosToUpdate) > 0 {
 		updatedTwitchVideos, err := app.getExistingTwitchVideoData(twitchVideosToUpdate)
 		if err != nil {
 			app.errorLog.Println(err.Error())
 		} else {
 			updatedVideos = append(updatedVideos, updatedTwitchVideos...)
+			videosToDelete = getVideosToDelete(twitchVideosToUpdate, updatedTwitchVideos)
 		}
 	}
 
@@ -211,6 +213,7 @@ func (app *application) updateVideoMetadata(videos []*models.Video) {
 			app.errorLog.Println(err.Error())
 		} else {
 			updatedVideos = append(updatedVideos, updatedYoutubeVideos...)
+			videosToDelete = append(videosToDelete, getVideosToDelete(youtubeVideosToUpdate, updatedYoutubeVideos)...)
 		}
 	}
 
@@ -220,4 +223,31 @@ func (app *application) updateVideoMetadata(videos []*models.Video) {
 			app.errorLog.Println(err.Error())
 		}
 	}
+
+	if len(videosToDelete) > 0 {
+		err := app.videos.DeleteMany(videosToDelete)
+		if err != nil {
+			app.errorLog.Println(err.Error())
+		}
+	}
+}
+
+// Videos that were deleted do not return from Twitch and Youtube.
+// We find out which ones by comparing the list that was passed to the API with the list that returned.
+func getVideosToDelete(videos []*models.Video, updatedVideos []*models.Video) []*models.Video {
+	var videosToDelete []*models.Video
+	for _, v := range videos {
+		videoWasDeleted := true
+		for _, uv := range updatedVideos {
+			if v.ID == uv.ID {
+				videoWasDeleted = false
+				break
+			}
+		}
+
+		if videoWasDeleted {
+			videosToDelete = append(videosToDelete, v)
+		}
+	}
+	return videosToDelete
 }

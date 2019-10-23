@@ -187,6 +187,14 @@ func (app *application) getExistingYoutubeVideoData(videos []*models.Video) ([]*
 		return nil, err
 	}
 
+	// Some extra checks here, because based on the return value of this method videos will be deleted.
+	// Want to make sure videos that are still present in Youtube do not get deleted.
+	if res.StatusCode != http.StatusOK {
+		err = errors.New("youtube API error")
+		app.errorLog.Println(err.Error())
+		return nil, err
+	}
+
 	type Response struct {
 		Items []YoutubeVideo
 	}

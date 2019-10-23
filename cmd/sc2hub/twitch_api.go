@@ -150,6 +150,12 @@ func (app *application) getExistingTwitchVideoData(videos []*models.Video) ([]*m
 		return nil, err
 	}
 
+	// Some extra checks here, because based on the return value of this method videos will be deleted.
+	// Want to make sure videos that are still present in Twitch do not get deleted.
+	if !(res.StatusCode == http.StatusOK || res.StatusCode == http.StatusNotFound) {
+		return nil, errors.New("twitch API error")
+	}
+
 	if res.StatusCode == http.StatusUnauthorized {
 		res, err = app.reauthenticateAndRepeatTwitchRequest(req)
 		if err != nil {

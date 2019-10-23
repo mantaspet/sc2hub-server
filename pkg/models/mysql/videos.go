@@ -163,3 +163,29 @@ func (m *VideoModel) UpdateMetadata(videos []*models.Video) error {
 
 	return nil
 }
+
+func (m *VideoModel) DeleteMany(videos []*models.Video) error {
+	var err error
+	for _, v := range videos {
+		tx, err := m.DB.Begin()
+		if err != nil {
+			continue
+		}
+
+		_, err = tx.Exec("DELETE FROM player_videos WHERE video_id=?;", v.ID)
+		if err != nil {
+			_ = tx.Rollback()
+			continue
+		}
+
+		_, err = tx.Exec("DELETE FROM videos WHERE id=?;", v.ID)
+		if err != nil {
+			_ = tx.Rollback()
+			continue
+		}
+
+		_ = tx.Commit()
+	}
+
+	return err
+}
