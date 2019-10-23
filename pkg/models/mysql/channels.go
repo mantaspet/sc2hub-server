@@ -123,6 +123,7 @@ func (m *ChannelModel) Insert(channel models.Channel, categoryID int) (*models.C
 	if err != nil {
 		return nil, err
 	}
+	defer tx.Rollback()
 
 	insertStmt := `INSERT INTO	channels (id, platform_id, login, title, profile_image_url)
 		VALUES (?, ?, ?, ?, ?)
@@ -136,7 +137,6 @@ func (m *ChannelModel) Insert(channel models.Channel, categoryID int) (*models.C
 	insertStmt = `INSERT INTO event_category_channels (event_category_id, channel_id) VALUES (?, ?)`
 	_, err = tx.Exec(insertStmt, categoryID, channel.ID)
 	if err != nil {
-		_ = tx.Rollback()
 		return nil, err
 	}
 
@@ -148,12 +148,10 @@ func (m *ChannelModel) Insert(channel models.Channel, categoryID int) (*models.C
 	res := &models.Channel{}
 	err = tx.QueryRow(selectStmt, channel.ID).Scan(&res.ID, &res.PlatformID, &res.Login, &res.Title, &res.ProfileImageURL)
 	if err != nil {
-		_ = tx.Rollback()
 		return res, err
 	}
 
-	err = tx.Commit()
-	return res, err
+	return res, tx.Commit()
 }
 
 func (m *ChannelModel) DeleteFromCategory(channelID string, categoryID int) error {
@@ -161,6 +159,7 @@ func (m *ChannelModel) DeleteFromCategory(channelID string, categoryID int) erro
 	if err != nil {
 		return err
 	}
+	defer tx.Rollback()
 
 	stmt := `DELETE FROM event_category_channels WHERE channel_id=? AND event_category_id=?`
 	res, err := tx.Exec(stmt, channelID, categoryID)
@@ -185,16 +184,13 @@ func (m *ChannelModel) DeleteFromCategory(channelID string, categoryID int) erro
 	stmt = `DELETE FROM channels WHERE id=?`
 	res, err = tx.Exec(stmt, channelID)
 	if err != nil {
-		_ = tx.Rollback()
 		return err
 	}
 
 	rowCnt, err = res.RowsAffected()
 	if rowCnt == 0 {
-		_ = tx.Rollback()
 		return models.ErrNotFound
 	} else if err != nil {
-		_ = tx.Rollback()
 		return err
 	}
 

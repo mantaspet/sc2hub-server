@@ -159,18 +159,17 @@ func (m *EventCategoryModel) Delete(id string) error {
 	if err != nil {
 		return err
 	}
+	defer tx.Rollback()
 
 	var currentPrio int
 	err = tx.QueryRow(`SELECT priority FROM event_categories WHERE id=?`, id).Scan(&currentPrio)
 	if err != nil {
-		_ = tx.Rollback()
 		return err
 	}
 
 	var maxPrio int
 	err = tx.QueryRow(`SELECT max(priority) as max FROM event_categories`).Scan(&maxPrio)
 	if err != nil {
-		_ = tx.Rollback()
 		return err
 	}
 
@@ -178,26 +177,23 @@ func (m *EventCategoryModel) Delete(id string) error {
 	if err != nil {
 		return err
 	}
+	defer updateStmt.Close()
 	for i := currentPrio + 1; i <= maxPrio; i++ {
 		_, err = updateStmt.Exec(i-1, i)
 		if err != nil {
-			_ = tx.Rollback()
 			return err
 		}
 	}
 
 	res, err := tx.Exec(`DELETE FROM event_categories WHERE id=?`, id)
 	if err != nil {
-		_ = tx.Rollback()
 		return err
 	}
 
 	rowCnt, err := res.RowsAffected()
 	if rowCnt == 0 {
-		_ = tx.Rollback()
 		return models.ErrNotFound
 	} else if err != nil {
-		_ = tx.Rollback()
 		return err
 	}
 
@@ -210,30 +206,28 @@ func (m *EventCategoryModel) UpdatePriorities(id int, newPrio int) error {
 	if err != nil {
 		return err
 	}
+	defer tx.Rollback()
 
 	var currentPrio int
 	err = tx.QueryRow(`SELECT priority FROM event_categories WHERE id=?`, id).Scan(&currentPrio)
 	if err != nil {
-		_ = tx.Rollback()
 		return err
 	}
 
 	if currentPrio == newPrio {
-		_ = tx.Rollback()
 		return nil
 	}
 
 	updateStmt, err := tx.Prepare(`UPDATE event_categories SET priority=? WHERE priority=?`)
 	if err != nil {
-		_ = tx.Rollback()
 		return err
 	}
+	defer updateStmt.Close()
 
 	if newPrio > currentPrio {
 		for i := currentPrio + 1; i <= newPrio; i++ {
 			_, err = updateStmt.Exec(i-1, i)
 			if err != nil {
-				_ = tx.Rollback()
 				return err
 			}
 		}
@@ -241,7 +235,6 @@ func (m *EventCategoryModel) UpdatePriorities(id int, newPrio int) error {
 		for i := currentPrio - 1; i >= newPrio; i-- {
 			_, err = updateStmt.Exec(i+1, i)
 			if err != nil {
-				_ = tx.Rollback()
 				return err
 			}
 		}
@@ -249,7 +242,6 @@ func (m *EventCategoryModel) UpdatePriorities(id int, newPrio int) error {
 
 	_, err = tx.Exec(`UPDATE event_categories SET priority=? WHERE id=?`, newPrio, id)
 	if err != nil {
-		_ = tx.Rollback()
 		return err
 	}
 
