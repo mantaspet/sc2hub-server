@@ -27,7 +27,7 @@ type TwitchVideo struct {
 	Duration     string `json:"duration"`
 }
 
-type TwitchChannel struct {
+type TwitchUser struct {
 	ID              string `json:"id"`
 	Login           string `json:"login"`
 	Title           string `json:"display_name"`
@@ -37,6 +37,13 @@ type TwitchChannel struct {
 	ProfileImageURL string `json:"profile_image_url"`
 	OfflineImageURL string `json:"offline_image_url"`
 	ViewCount       int    `json:"view_count"`
+}
+
+type TwitchStream struct {
+	UserName     string `json:"user_name"`
+	Title        string `json:"title"`
+	ThumbnailURL string `json:"thumbnail_url"`
+	ViewerCount  int    `json:"viewer_count"`
 }
 
 func (app *application) getTwitchAccessToken() error {
@@ -183,6 +190,35 @@ func (app *application) getExistingTwitchVideoData(videos []*models.Video) ([]*m
 	return updatedVideos, nil
 }
 
+func (app *application) getTwitchLiveStreams(channels []*models.Channel) ([]TwitchStream, error) {
+	url := "https://api.twitch.tv/helix/streams?"
+	for _, c := range channels {
+		url += "user_id=" + c.ID + "&"
+	}
+	req, _ := http.NewRequest("GET", url, nil)
+	req.Header.Set("Client-ID", "hmw2ygtkoc9si4001jxq2xmrmc8g99")
+
+	res, err := app.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	if res.StatusCode == http.StatusUnauthorized {
+		res, err = app.reauthenticateAndRepeatTwitchRequest(req)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	type ResponseBody struct {
+		Data []TwitchStream
+	}
+	var resBody ResponseBody
+	err = json.NewDecoder(res.Body).Decode(&resBody)
+
+	return resBody.Data, err
+}
+
 var getTwitchChannelDataByLogin = func(login string, httpClient *http.Client) (models.Channel, error) {
 	var channel models.Channel
 	url := "https://api.twitch.tv/helix/users?login=" + login
@@ -194,7 +230,7 @@ var getTwitchChannelDataByLogin = func(login string, httpClient *http.Client) (m
 	}
 
 	type ResponseBody struct {
-		Data []TwitchChannel
+		Data []TwitchUser
 	}
 	var resBody ResponseBody
 	err = json.NewDecoder(res.Body).Decode(&resBody)

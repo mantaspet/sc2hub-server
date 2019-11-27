@@ -16,7 +16,7 @@ func (app *application) router() chi.Router {
 	})
 
 	r.Route("/channels", func(r chi.Router) {
-		r.Get("/twitch", app.getAllTwitchChannels)
+		r.Get("/twitch-livestreams", app.getLiveStreamingChannels)
 	})
 
 	r.Route("/events", func(r chi.Router) {
