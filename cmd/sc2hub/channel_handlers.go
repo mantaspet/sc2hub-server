@@ -34,14 +34,20 @@ func (app *application) getChannelsByCategory(w http.ResponseWriter, r *http.Req
 	app.json(w, res)
 }
 
-func (app *application) getAllTwitchChannels(w http.ResponseWriter, r *http.Request) {
+func (app *application) getLiveStreamingChannels(w http.ResponseWriter, r *http.Request) {
 	res, err := app.channels.SelectAllFromTwitch()
 	if err != nil {
 		app.serverError(w, err)
 		return
 	}
 
-	app.json(w, res)
+	liveStreams, err := app.getTwitchLiveStreams(res)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	app.json(w, liveStreams)
 }
 
 // checks if URL points to a valid twitch or youtube channel,
