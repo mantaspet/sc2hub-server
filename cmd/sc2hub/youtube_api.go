@@ -136,7 +136,7 @@ func (app *application) getYoutubeVideos(channel *models.Channel) ([]*models.Vid
 		if !strings.Contains(lowercaseTitle, channel.Pattern) || strings.Contains(lowercaseTitle, "rerun") {
 			continue
 		}
-		createdAt, err := time.Parse("2006-01-02T15:04:05.000Z", v.Snippet.PublishedAt)
+		createdAt, err := time.Parse("2006-01-02T15:04:05Z", v.Snippet.PublishedAt)
 		if err != nil {
 			createdAt = time.Now()
 		}

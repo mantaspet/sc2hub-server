@@ -133,7 +133,8 @@ func (m *VideoModel) InsertOrUpdateMany(videos []*models.Video) (int64, error) {
 			duration=VALUES(duration),
 			thumbnail_url=VALUES(thumbnail_url),
 			view_count=VALUES(view_count),
-			updated_at=VALUES(updated_at);`, strings.Join(valueStrings, ","))
+			updated_at=VALUES(updated_at),
+			created_at=VALUES(created_at);`, strings.Join(valueStrings, ","))
 
 	res, err := m.DB.Exec(stmt, valueArgs...)
 	if err != nil {
