@@ -26,7 +26,7 @@ func parseFlags() {
 	flag.BoolVar(&flgProduction, "prod", false, "if true, we start HTTPS server")
 	flag.StringVar(&flgAddr, "addr", ":443", "HTTPS network address")
 	flag.StringVar(&flgDsn, "dsn", "root:root@/sc2hub", "MySQL data source name")
-	flag.StringVar(&flgOrigin, "origin", "http://localhost:4200", "client origin")
+	flag.StringVar(&flgOrigin, "origin", "http://localhost:3000", "client origin")
 	flag.StringVar(&flgClientSecret, "secret", "", "JWT auth client secret")
 	flag.StringVar(&flgYoutubeApiKey, "youtube_key", "", "YouTube data API v3 key")
 	flag.Parse()
