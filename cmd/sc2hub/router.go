@@ -18,7 +18,8 @@ func (app *application) router() chi.Router {
 
 	r.Route("/channels", func(r chi.Router) {
 		r.Options("/*", app.genericPreflightHandler)
-		r.Get("/twitch-livestreams", app.getLiveStreamingChannels)
+		r.Get("/live", app.getLiveChannels)
+		r.Get("/live-registered", app.getLiveRegisteredChannels)
 	})
 
 	r.Route("/events", func(r chi.Router) {

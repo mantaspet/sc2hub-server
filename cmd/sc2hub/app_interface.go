@@ -14,6 +14,7 @@ type application struct {
 	twitchAccessToken string
 	errorLog          *log.Logger
 	infoLog           *log.Logger
+	twitchGameId      int
 	events            interface {
 		SelectInDateRange(dateFrom string, dateTo string) ([]*models.Event, error)
 		SelectOne(id string) (*models.Event, error)

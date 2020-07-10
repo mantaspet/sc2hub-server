@@ -34,14 +34,35 @@ func (app *application) getChannelsByCategory(w http.ResponseWriter, r *http.Req
 	app.json(w, res)
 }
 
-func (app *application) getLiveStreamingChannels(w http.ResponseWriter, r *http.Request) {
-	res, err := app.channels.SelectAllFromTwitch()
+func (app *application) getLiveChannels(w http.ResponseWriter, r *http.Request) {
+	url := "game_id=" + strconv.Itoa(app.twitchGameId)
+
+	from := r.URL.Query().Get("from")
+	if from != "" {
+		url += "&after=" + from
+	}
+
+	liveStreams, err := app.getTwitchLiveStreams(url)
 	if err != nil {
 		app.serverError(w, err)
 		return
 	}
 
-	liveStreams, err := app.getTwitchLiveStreams(res)
+	app.json(w, liveStreams)
+}
+
+func (app *application) getLiveRegisteredChannels(w http.ResponseWriter, r *http.Request) {
+	channels, err := app.channels.SelectAllFromTwitch()
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	query := ""
+	for _, c := range channels {
+		query += "user_id=" + c.ID + "&"
+	}
+	liveStreams, err := app.getTwitchLiveStreams(query)
 	if err != nil {
 		app.serverError(w, err)
 		return

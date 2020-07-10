@@ -76,6 +76,7 @@ func main() {
 		videos:          &mysql.VideoModel{DB: db},
 		channels:        &mysql.ChannelModel{DB: db},
 		users:           &mysql.UserModel{DB: db},
+		twitchGameId:    490422,
 	}
 
 	err = app.getTwitchAccessToken()
