@@ -96,6 +96,7 @@ func (app *application) addChannelToCategory(w http.ResponseWriter, r *http.Requ
 	twitchIndex := strings.Index(req.URL, "twitch.tv/")
 	youtubeIndex1 := strings.Index(req.URL, "youtube.com/user/")
 	youtubeIndex2 := strings.Index(req.URL, "youtube.com/channel/")
+	youtubeIndex3 := strings.Index(req.URL, "youtube.com/c/")
 
 	var channel models.Channel
 	if twitchIndex > -1 {
@@ -119,6 +120,13 @@ func (app *application) addChannelToCategory(w http.ResponseWriter, r *http.Requ
 			req.URL = req.URL[:youtubeIndex2]
 		}
 		channel, err = getYoutubeChannelData("", req.URL, app.httpClient)
+	} else if youtubeIndex3 > -1 {
+		req.URL = req.URL[youtubeIndex3+14:]
+		youtubeIndex3 = strings.Index(req.URL, "/")
+		if youtubeIndex3 > -1 {
+			req.URL = req.URL[:youtubeIndex3]
+		}
+		channel, err = getYoutubeChannelData(req.URL, "", app.httpClient)
 	} else {
 		app.validationError(w, map[string]string{"url": "Must be a valid twitch.tv or youtube.com channel URL"})
 		return
