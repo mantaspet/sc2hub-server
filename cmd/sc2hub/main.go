@@ -17,7 +17,8 @@ var (
 	flgProduction    = false
 	flgAddr          = ":443"
 	flgDsn           = ""
-	flgOrigin        = ""
+	flgAppOrigin     = ""
+	flgAdminOrigin   = ""
 	flgClientSecret  = ""
 	flgYoutubeApiKey = ""
 )
@@ -26,7 +27,8 @@ func parseFlags() {
 	flag.BoolVar(&flgProduction, "prod", false, "if true, we start HTTPS server")
 	flag.StringVar(&flgAddr, "addr", ":443", "HTTPS network address")
 	flag.StringVar(&flgDsn, "dsn", "root:root@/sc2hub", "MySQL data source name")
-	flag.StringVar(&flgOrigin, "origin", "http://localhost:3000", "client origin")
+	flag.StringVar(&flgAppOrigin, "appOrigin", "http://localhost:3000", "app client origin")
+	flag.StringVar(&flgAdminOrigin, "adminOrigin", "http://localhost:8080", "admin client origin")
 	flag.StringVar(&flgClientSecret, "secret", "", "JWT auth client secret")
 	flag.StringVar(&flgYoutubeApiKey, "youtube_key", "", "YouTube data API v3 key")
 	flag.Parse()
@@ -66,7 +68,8 @@ func main() {
 	app := &application{
 		db:              db,
 		httpClient:      httpClient,
-		origin:          flgOrigin,
+		appOrigin:       flgAppOrigin,
+		adminOrigin:     flgAdminOrigin,
 		errorLog:        errorLog,
 		infoLog:         infoLog,
 		events:          &mysql.EventModel{DB: db},

@@ -10,7 +10,8 @@ import (
 type application struct {
 	httpClient        *http.Client
 	db                *sql.DB // TODO find a better solution. This is used only in pkg validators SQLUnique function
-	origin            string
+	appOrigin         string
+	adminOrigin       string
 	twitchAccessToken string
 	errorLog          *log.Logger
 	infoLog           *log.Logger
