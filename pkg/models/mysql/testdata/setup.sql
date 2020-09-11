@@ -74,10 +74,9 @@ create table channels
 
 create table event_category_channels
 (
-    id int unsigned auto_increment
-        primary key,
     event_category_id int unsigned not null,
     channel_id varchar(64) not null,
+    primary key (event_category_id, channel_id),
     constraint event_category_channels_channels_id_fk
         foreign key (channel_id) references channels (id),
     constraint event_category_channels_event_categories_id_fk
