@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-var VideoPageLength = 24
+var VideoPageLength = 36
 
 type Video struct {
 	ID              string
