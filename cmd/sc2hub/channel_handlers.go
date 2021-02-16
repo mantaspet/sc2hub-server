@@ -39,7 +39,10 @@ func (app *application) getLiveChannels(w http.ResponseWriter, r *http.Request) 
 
 	from := r.URL.Query().Get("from")
 	if from != "" {
-		url += "&after=" + from
+		url += "&after=" + from + "&first=24"
+	} else {
+		// for some reason streams endpoint returns "first" - 1 when "after" is not passed
+		url += "&first=25"
 	}
 
 	liveStreams, err := app.getTwitchLiveStreams(url)

@@ -206,6 +206,7 @@ func (app *application) getTwitchLiveStreams(query string) (*StreamResponse, err
 	url := "https://api.twitch.tv/helix/streams?"
 	req, _ := http.NewRequest("GET", url+query, nil)
 	req.Header.Set("Client-ID", "hmw2ygtkoc9si4001jxq2xmrmc8g99")
+	req.Header.Set("Authorization", "Bearer "+app.twitchAccessToken)
 
 	twitchRes, err := app.httpClient.Do(req)
 	if err != nil {

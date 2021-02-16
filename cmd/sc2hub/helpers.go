@@ -77,6 +77,6 @@ func (app *application) genericPreflightHandler(w http.ResponseWriter, r *http.R
 	} else {
 		w.Header().Set("Access-Control-Allow-Origin", app.appOrigin)
 	}
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Token")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 	w.WriteHeader(http.StatusOK)
 }
