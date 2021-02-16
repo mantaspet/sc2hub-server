@@ -32,8 +32,8 @@ func (app *application) generateJWT(username string) (string, error) {
 
 var isAuthenticated = func(app *application, endpoint func(w http.ResponseWriter, r *http.Request)) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Header["Token"] != nil {
-			token, err := jwt.Parse(r.Header["Token"][0], func(token *jwt.Token) (interface{}, error) {
+		if r.Header["Authorization"] != nil {
+			token, err := jwt.Parse(r.Header["Authorization"][0], func(token *jwt.Token) (interface{}, error) {
 				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 					return nil, errors.New("token is invalid")
 				}
