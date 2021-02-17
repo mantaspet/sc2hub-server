@@ -108,7 +108,7 @@ func (app *application) addChannelToCategory(w http.ResponseWriter, r *http.Requ
 		if twitchIndex > -1 {
 			req.URL = req.URL[:twitchIndex]
 		}
-		channel, err = getTwitchChannelDataByLogin(req.URL, app.httpClient)
+		channel, err = app.getTwitchChannelDataByLogin(req.URL, app.httpClient)
 	} else if youtubeIndex1 > -1 {
 		req.URL = req.URL[youtubeIndex1+17:]
 		youtubeIndex1 = strings.Index(req.URL, "/")
@@ -131,13 +131,13 @@ func (app *application) addChannelToCategory(w http.ResponseWriter, r *http.Requ
 		}
 		channel, err = getYoutubeChannelData(req.URL, "", app.httpClient)
 	} else {
-		app.validationError(w, map[string]string{"url": "Must be a valid twitch.tv or youtube.com channel URL"})
+		app.validationError(w, map[string]string{"URL": "Must be a valid twitch.tv or youtube.com channel URL"})
 		return
 	}
 
 	if err != nil {
 		if index := strings.Index(err.Error(), "channel does not exist"); index > -1 {
-			app.validationError(w, map[string]string{"url": "Channel does not exist"})
+			app.validationError(w, map[string]string{"URL": "Channel does not exist"})
 		} else {
 			app.serverError(w, err)
 		}
@@ -147,7 +147,7 @@ func (app *application) addChannelToCategory(w http.ResponseWriter, r *http.Requ
 	res, err := app.channels.Insert(channel, id)
 	if err != nil {
 		if index := strings.Index(err.Error(), "Duplicate entry"); index > -1 {
-			app.validationError(w, map[string]string{"url": "This channel is already in database"})
+			app.validationError(w, map[string]string{"URL": "This channel is already in database"})
 		} else {
 			app.serverError(w, err)
 		}

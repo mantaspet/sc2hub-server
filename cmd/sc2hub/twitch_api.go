@@ -231,11 +231,12 @@ func (app *application) getTwitchLiveStreams(query string) (*StreamResponse, err
 	return &res, err
 }
 
-var getTwitchChannelDataByLogin = func(login string, httpClient *http.Client) (models.Channel, error) {
+func (app *application) getTwitchChannelDataByLogin(login string, httpClient *http.Client) (models.Channel, error) {
 	var channel models.Channel
 	url := "https://api.twitch.tv/helix/users?login=" + login
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Set("Client-ID", "hmw2ygtkoc9si4001jxq2xmrmc8g99")
+	req.Header.Set("Authorization", "Bearer "+app.twitchAccessToken)
 	res, err := httpClient.Do(req)
 	if err != nil {
 		return channel, err
