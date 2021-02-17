@@ -32,7 +32,7 @@ func (app *application) getAllArticles(w http.ResponseWriter, r *http.Request) {
 	var err error
 	from := parsePaginationParam(r.URL.Query().Get("from"))
 	if r.URL.Query().Get("recent") != "" {
-		articles, err = app.articles.SelectPage(9, 0, "")
+		articles, err = app.articles.SelectPage(7, 0, "")
 	} else {
 		articles, err = app.articles.SelectPage(models.ArticlePageLength, from, r.URL.Query().Get("query"))
 	}
