@@ -14,13 +14,15 @@ import (
 )
 
 var (
-	flgProduction    = false
-	flgAddr          = ":443"
-	flgDsn           = ""
-	flgAppOrigin     = ""
-	flgAdminOrigin   = ""
-	flgClientSecret  = ""
-	flgYoutubeApiKey = ""
+	flgProduction         = false
+	flgAddr               = ":443"
+	flgDsn                = ""
+	flgAppOrigin          = ""
+	flgAdminOrigin        = ""
+	flgClientSecret       = ""
+	flgYoutubeApiKey      = ""
+	flgTwitchClientId     = ""
+	flgTwitchClientSecret = ""
 )
 
 func parseFlags() {
@@ -31,6 +33,8 @@ func parseFlags() {
 	flag.StringVar(&flgAdminOrigin, "adminOrigin", "http://localhost:8080", "admin client origin")
 	flag.StringVar(&flgClientSecret, "secret", "", "JWT auth client secret")
 	flag.StringVar(&flgYoutubeApiKey, "youtube_key", "", "YouTube data API v3 key")
+	flag.StringVar(&flgTwitchClientId, "twitchClientId", "", "Twitch app client id")
+	flag.StringVar(&flgTwitchClientSecret, "twitchClientSecret", "", "Twitch app client secret")
 	flag.Parse()
 }
 
@@ -66,20 +70,22 @@ func main() {
 	httpClient := &http.Client{Timeout: 10 * time.Second}
 
 	app := &application{
-		db:              db,
-		httpClient:      httpClient,
-		appOrigin:       flgAppOrigin,
-		adminOrigin:     flgAdminOrigin,
-		errorLog:        errorLog,
-		infoLog:         infoLog,
-		events:          &mysql.EventModel{DB: db},
-		eventCategories: &mysql.EventCategoryModel{DB: db},
-		players:         &mysql.PlayerModel{DB: db},
-		articles:        &mysql.ArticleModel{DB: db},
-		videos:          &mysql.VideoModel{DB: db},
-		channels:        &mysql.ChannelModel{DB: db},
-		users:           &mysql.UserModel{DB: db},
-		twitchGameId:    490422,
+		db:                 db,
+		httpClient:         httpClient,
+		appOrigin:          flgAppOrigin,
+		adminOrigin:        flgAdminOrigin,
+		twitchClientId:     flgTwitchClientId,
+		twitchClientSecret: flgTwitchClientSecret,
+		errorLog:           errorLog,
+		infoLog:            infoLog,
+		events:             &mysql.EventModel{DB: db},
+		eventCategories:    &mysql.EventCategoryModel{DB: db},
+		players:            &mysql.PlayerModel{DB: db},
+		articles:           &mysql.ArticleModel{DB: db},
+		videos:             &mysql.VideoModel{DB: db},
+		channels:           &mysql.ChannelModel{DB: db},
+		users:              &mysql.UserModel{DB: db},
+		twitchGameId:       490422,
 	}
 
 	err = app.getTwitchAccessToken()

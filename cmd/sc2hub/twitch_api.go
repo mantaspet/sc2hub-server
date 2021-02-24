@@ -59,7 +59,7 @@ type StreamResponse struct {
 }
 
 func (app *application) getTwitchAccessToken() error {
-	authURL := "https://id.twitch.tv/oauth2/token?client_secret=7stuc2sc1z5crnrcdtiw9x95cfyqp0&client_id=hmw2ygtkoc9si4001jxq2xmrmc8g99&grant_type=client_credentials"
+	authURL := "https://id.twitch.tv/oauth2/token?grant_type=client_credentials&client_id=" + app.twitchClientId + "&client_secret=" + app.twitchClientSecret
 	res, err := app.httpClient.Post(authURL, "application/json", nil)
 	if err != nil {
 		return err
@@ -97,6 +97,7 @@ func (app *application) getTwitchVideos(channel *models.Channel) ([]*models.Vide
 
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Set("Authorization", "Bearer "+app.twitchAccessToken)
+	req.Header.Set("Client-ID", app.twitchClientId)
 	res, err := app.httpClient.Do(req)
 	if err != nil {
 		app.errorLog.Println(err.Error())

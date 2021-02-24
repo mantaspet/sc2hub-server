@@ -8,15 +8,17 @@ import (
 )
 
 type application struct {
-	httpClient        *http.Client
-	db                *sql.DB // TODO find a better solution. This is used only in pkg validators SQLUnique function
-	appOrigin         string
-	adminOrigin       string
-	twitchAccessToken string
-	errorLog          *log.Logger
-	infoLog           *log.Logger
-	twitchGameId      int
-	events            interface {
+	httpClient         *http.Client
+	db                 *sql.DB // TODO find a better solution. This is used only in pkg validators SQLUnique function
+	appOrigin          string
+	adminOrigin        string
+	twitchAccessToken  string
+	twitchClientId     string
+	twitchClientSecret string
+	errorLog           *log.Logger
+	infoLog            *log.Logger
+	twitchGameId       int
+	events             interface {
 		SelectInDateRange(dateFrom string, dateTo string) ([]*models.Event, error)
 		SelectOne(id string) (*models.Event, error)
 		InsertMany(events []models.Event) (int64, error)
