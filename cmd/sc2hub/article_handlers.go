@@ -99,12 +99,18 @@ func (app *application) crawlArticles() (string, error) {
 		return "", err
 	}
 
-	teamLiquidArticles, err := crawlers.TeamLiquidNews()
+	teamLiquidFeaturedNews, err := crawlers.TeamLiquidNews("https://tl.net/news/")
 	if err != nil {
 		return "", err
 	}
 
-	crawledArticles = append(crawledArticles, teamLiquidArticles...)
+	teamLiquidCommunityNews, err := crawlers.TeamLiquidNews("https://tl.net/news/community/")
+	if err != nil {
+		return "", err
+	}
+
+	crawledArticles = append(crawledArticles, teamLiquidFeaturedNews...)
+	crawledArticles = append(crawledArticles, teamLiquidCommunityNews...)
 
 	if len(crawledArticles) == 0 {
 		return "No articles found", nil
