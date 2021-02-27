@@ -39,7 +39,7 @@ func (m *ChannelModel) SelectAllFromTwitch() ([]*models.Channel, error) {
 
 func (m *ChannelModel) SelectFromAllCategories(platformID int) ([]*models.Channel, error) {
 	stmt := `
-		SELECT channels.id, channels.platform_id, event_categories.id, event_categories.pattern
+		SELECT channels.id, channels.platform_id, event_categories.id, event_categories.include_patterns, event_categories.exclude_patterns
 		FROM event_category_channels
 		INNER JOIN channels
 		ON event_category_channels.channel_id = channels.id
@@ -62,7 +62,7 @@ func (m *ChannelModel) SelectFromAllCategories(platformID int) ([]*models.Channe
 	channels := []*models.Channel{}
 	for rows.Next() {
 		channel := &models.Channel{}
-		err := rows.Scan(&channel.ID, &channel.PlatformID, &channel.EventCategoryID, &channel.Pattern)
+		err := rows.Scan(&channel.ID, &channel.PlatformID, &channel.EventCategoryID, &channel.IncludePatterns, &channel.ExcludePatterns)
 		if err != nil {
 			return nil, err
 		}

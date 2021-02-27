@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"runtime/debug"
 	"strconv"
+	"strings"
 )
 
 func parsePaginationParam(param string) int {
@@ -79,4 +80,34 @@ func (app *application) genericPreflightHandler(w http.ResponseWriter, r *http.R
 	}
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 	w.WriteHeader(http.StatusOK)
+}
+
+func (app *application) matchesPattern(stringsToCheck []string, includePatterns string, excludePatterns string) bool {
+	if len(includePatterns) == 0 {
+		return true
+	}
+	// check the exclude patterns first. If one is found in any of the passed strings - abort
+	if len(excludePatterns) > 0 {
+		excludePatternsArray := strings.Split(excludePatterns, ",")
+		for _, stringToCheck := range stringsToCheck {
+			toCheck := strings.ToLower(stringToCheck)
+			for _, excludePattern := range excludePatternsArray {
+				if strings.Contains(toCheck, excludePattern) {
+					return false
+				}
+			}
+		}
+	}
+
+	// if the exclude patterns didn't find matches - start looking for include patterns
+	includePatternsArray := strings.Split(includePatterns, ",")
+	for _, stringToCheck := range stringsToCheck {
+		toCheck := strings.ToLower(stringToCheck)
+		for _, includePattern := range includePatternsArray {
+			if strings.Contains(toCheck, includePattern) {
+				return true
+			}
+		}
+	}
+	return false
 }

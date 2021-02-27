@@ -158,8 +158,7 @@ func (app *application) crawlArticles() (string, error) {
 		}
 
 		for _, ec := range ecs {
-			if strings.Contains(strings.ToLower(a.Title), ec.Pattern) ||
-				strings.Contains(strings.ToLower(a.Excerpt), ec.Pattern) {
+			if app.matchesPattern([]string{a.Title, a.Excerpt}, ec.IncludePatterns, ec.ExcludePatterns) {
 				ecArticle := models.EventCategoryArticle{
 					EventCategoryID: ec.ID,
 					ArticleID:       a.ID,

@@ -10,7 +10,8 @@ type Channel struct {
 	ProfileImageURL string
 
 	// Not stored in channels table
-	Pattern         string
+	IncludePatterns string
+	ExcludePatterns string
 	EventCategoryID int
 }
 

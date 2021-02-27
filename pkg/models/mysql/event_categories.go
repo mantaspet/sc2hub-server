@@ -13,7 +13,7 @@ type EventCategoryModel struct {
 
 func (m *EventCategoryModel) SelectAll() ([]*models.EventCategory, error) {
 	stmt := `
-		SELECT id, name, pattern, COALESCE(info_url, ''), COALESCE(image_url, ''), COALESCE(description, ''), priority
+		SELECT id, name, include_patterns, exclude_patterns, COALESCE(info_url, ''), COALESCE(image_url, ''), COALESCE(description, ''), priority
 		FROM event_categories
 		ORDER BY priority`
 
@@ -26,7 +26,7 @@ func (m *EventCategoryModel) SelectAll() ([]*models.EventCategory, error) {
 	eventCategories := []*models.EventCategory{}
 	for rows.Next() {
 		ec := &models.EventCategory{}
-		err := rows.Scan(&ec.ID, &ec.Name, &ec.Pattern, &ec.InfoURL, &ec.ImageURL, &ec.Description, &ec.Priority)
+		err := rows.Scan(&ec.ID, &ec.Name, &ec.IncludePatterns, &ec.ExcludePatterns, &ec.InfoURL, &ec.ImageURL, &ec.Description, &ec.Priority)
 		if err != nil {
 			return nil, err
 		}
@@ -42,7 +42,7 @@ func (m *EventCategoryModel) SelectAll() ([]*models.EventCategory, error) {
 
 func (m *EventCategoryModel) SelectAllPatterns() ([]*models.EventCategory, error) {
 	stmt := `
-		SELECT id, pattern
+		SELECT id, include_patterns, exclude_patterns
 		FROM event_categories
 		ORDER BY priority`
 
@@ -55,7 +55,7 @@ func (m *EventCategoryModel) SelectAllPatterns() ([]*models.EventCategory, error
 	eventCategories := []*models.EventCategory{}
 	for rows.Next() {
 		ec := &models.EventCategory{}
-		err := rows.Scan(&ec.ID, &ec.Pattern)
+		err := rows.Scan(&ec.ID, &ec.IncludePatterns, &ec.ExcludePatterns)
 		if err != nil {
 			return nil, err
 		}
@@ -71,12 +71,12 @@ func (m *EventCategoryModel) SelectAllPatterns() ([]*models.EventCategory, error
 
 func (m *EventCategoryModel) SelectOne(id string) (*models.EventCategory, error) {
 	stmt := `
-		SELECT id, name, pattern, COALESCE(info_url, ''), COALESCE(image_url, ''), COALESCE(description, ''), priority
+		SELECT id, name, include_patterns, exclude_patterns, COALESCE(info_url, ''), COALESCE(image_url, ''), COALESCE(description, ''), priority
 		FROM event_categories
 		WHERE id=?`
 
 	ec := &models.EventCategory{}
-	err := m.DB.QueryRow(stmt, id).Scan(&ec.ID, &ec.Name, &ec.Pattern, &ec.InfoURL, &ec.ImageURL, &ec.Description,
+	err := m.DB.QueryRow(stmt, id).Scan(&ec.ID, &ec.Name, &ec.IncludePatterns, &ec.ExcludePatterns, &ec.InfoURL, &ec.ImageURL, &ec.Description,
 		&ec.Priority)
 	if err == sql.ErrNoRows {
 		return nil, models.ErrNotFound
@@ -90,11 +90,11 @@ func (m *EventCategoryModel) SelectOne(id string) (*models.EventCategory, error)
 
 func (m *EventCategoryModel) Insert(ec models.EventCategory) (*models.EventCategory, error) {
 	insertStmt := `
-		INSERT INTO event_categories (name, pattern, info_url, image_url, description, priority)
-		VALUES (?, ?, ?, ?, ?, ?)`
+		INSERT INTO event_categories (name, include_patterns, exclude_patterns, info_url, image_url, description, priority)
+		VALUES (?, ?, ?, ?, ?, ?, ?)`
 
 	selectStmt := `
-		SELECT id, name, pattern, COALESCE(info_url, ''), COALESCE(image_url, ''), COALESCE(description, ''), priority
+		SELECT id, name, include_patterns, exclude_patterns, COALESCE(info_url, ''), COALESCE(image_url, ''), COALESCE(description, ''), priority
 		FROM event_categories
 		WHERE id=?`
 
@@ -106,7 +106,7 @@ func (m *EventCategoryModel) Insert(ec models.EventCategory) (*models.EventCateg
 		return nil, err
 	}
 
-	insertRes, err := m.DB.Exec(insertStmt, ec.Name, ec.Pattern, ec.InfoURL, ec.ImageURL, &ec.Description, maxPriority+1)
+	insertRes, err := m.DB.Exec(insertStmt, ec.Name, ec.IncludePatterns, ec.ExcludePatterns, ec.InfoURL, ec.ImageURL, &ec.Description, maxPriority+1)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +116,7 @@ func (m *EventCategoryModel) Insert(ec models.EventCategory) (*models.EventCateg
 	}
 
 	res := &models.EventCategory{}
-	err = m.DB.QueryRow(selectStmt, id).Scan(&res.ID, &res.Name, &res.Pattern, &res.InfoURL, &res.ImageURL, &res.Description, &res.Priority)
+	err = m.DB.QueryRow(selectStmt, id).Scan(&res.ID, &res.Name, &res.IncludePatterns, &res.ExcludePatterns, &res.InfoURL, &res.ImageURL, &res.Description, &res.Priority)
 	if err != nil {
 		return res, err
 	}
@@ -127,15 +127,15 @@ func (m *EventCategoryModel) Insert(ec models.EventCategory) (*models.EventCateg
 func (m *EventCategoryModel) Update(id string, ec models.EventCategory) (*models.EventCategory, error) {
 	updateStmt := `
 		UPDATE event_categories
-		SET name=?, pattern=?, info_url=?, image_url=?, description=?
+		SET name=?, include_patterns=?, exclude_patterns=?, info_url=?, image_url=?, description=?
 		WHERE id=?`
 
 	selectStmt := `
-		SELECT id, name, pattern, COALESCE(info_url, ''), COALESCE(image_url, ''), COALESCE(description, ''), priority
+		SELECT id, name, include_patterns, exclude_patterns, COALESCE(info_url, ''), COALESCE(image_url, ''), COALESCE(description, ''), priority
 		FROM event_categories
 		WHERE id=?`
 
-	updateRes, err := m.DB.Exec(updateStmt, ec.Name, ec.Pattern, ec.InfoURL, ec.ImageURL, ec.Description, id)
+	updateRes, err := m.DB.Exec(updateStmt, ec.Name, ec.IncludePatterns, ec.ExcludePatterns, ec.InfoURL, ec.ImageURL, ec.Description, id)
 	if err != nil {
 		return nil, err
 	}
@@ -145,7 +145,7 @@ func (m *EventCategoryModel) Update(id string, ec models.EventCategory) (*models
 	}
 
 	res := &models.EventCategory{}
-	err = m.DB.QueryRow(selectStmt, id).Scan(&res.ID, &res.Name, &res.Pattern, &res.InfoURL, &res.ImageURL,
+	err = m.DB.QueryRow(selectStmt, id).Scan(&res.ID, &res.Name, &res.IncludePatterns, &res.ExcludePatterns, &res.InfoURL, &res.ImageURL,
 		&res.Description, &res.Priority)
 	if err != nil {
 		return nil, err
@@ -266,7 +266,7 @@ func (m *EventCategoryModel) AssignToEvents(events []models.Event) ([]models.Eve
 
 	for _, e := range events {
 		for _, ec := range eventCategories {
-			if strings.Contains(strings.ToLower(e.Title), ec.Pattern) {
+			if strings.Contains(strings.ToLower(e.Title), ec.IncludePatterns) && !strings.Contains(strings.ToLower(e.Title), ec.ExcludePatterns) {
 				e.EventCategoryID = ec.ID
 				break
 			}

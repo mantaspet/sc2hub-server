@@ -16,9 +16,9 @@ func seedData(db *sql.DB) error {
 	stmt += ""
 	for _, ec := range mock.EventCategories {
 		stmt += fmt.Sprintf("INSERT INTO event_categories"+
-			"(name, pattern, info_url, image_url, description, priority) "+
+			"(name, include_patterns, info_url, image_url, description, priority) "+
 			"VALUES ('%v', '%v', '%v', '%v', '%v', %v);",
-			ec.Name, ec.Pattern, ec.InfoURL, ec.ImageURL, ec.Description, ec.Priority)
+			ec.Name, ec.IncludePatterns, ec.InfoURL, ec.ImageURL, ec.Description, ec.Priority)
 	}
 
 	for _, c := range mock.Channels {
