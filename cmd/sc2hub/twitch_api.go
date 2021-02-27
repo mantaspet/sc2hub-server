@@ -46,8 +46,20 @@ type TwitchStream struct {
 	ViewerCount  int    `json:"viewer_count"`
 }
 
+type TwitchStreamResponse struct {
+	Data       []TwitchStream
+	Pagination struct {
+		Cursor string
+	}
+}
+
+type StreamResponse struct {
+	Items  []TwitchStream
+	Cursor string
+}
+
 func (app *application) getTwitchAccessToken() error {
-	authURL := "https://id.twitch.tv/oauth2/token?client_secret=7stuc2sc1z5crnrcdtiw9x95cfyqp0&client_id=hmw2ygtkoc9si4001jxq2xmrmc8g99&grant_type=client_credentials"
+	authURL := "https://id.twitch.tv/oauth2/token?grant_type=client_credentials&client_id=" + app.twitchClientId + "&client_secret=" + app.twitchClientSecret
 	res, err := app.httpClient.Post(authURL, "application/json", nil)
 	if err != nil {
 		return err
@@ -85,6 +97,7 @@ func (app *application) getTwitchVideos(channel *models.Channel) ([]*models.Vide
 
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Set("Authorization", "Bearer "+app.twitchAccessToken)
+	req.Header.Set("Client-ID", app.twitchClientId)
 	res, err := app.httpClient.Do(req)
 	if err != nil {
 		app.errorLog.Println(err.Error())
@@ -112,8 +125,7 @@ func (app *application) getTwitchVideos(channel *models.Channel) ([]*models.Vide
 
 	var videos []*models.Video
 	for _, v := range data.Data {
-		lowercaseTitle := strings.ToLower(v.Title)
-		if !strings.Contains(lowercaseTitle, channel.Pattern) || strings.Contains(lowercaseTitle, "rerun") {
+		if !app.matchesPattern([]string{v.Title}, channel.IncludePatterns, channel.ExcludePatterns) {
 			continue
 		}
 
@@ -196,40 +208,41 @@ func (app *application) getExistingTwitchVideoData(videos []*models.Video) ([]*m
 	return updatedVideos, nil
 }
 
-func (app *application) getTwitchLiveStreams(channels []*models.Channel) ([]TwitchStream, error) {
+func (app *application) getTwitchLiveStreams(query string) (*StreamResponse, error) {
 	url := "https://api.twitch.tv/helix/streams?"
-	for _, c := range channels {
-		url += "user_id=" + c.ID + "&"
-	}
-	req, _ := http.NewRequest("GET", url, nil)
+	req, _ := http.NewRequest("GET", url+query, nil)
 	req.Header.Set("Client-ID", "hmw2ygtkoc9si4001jxq2xmrmc8g99")
+	req.Header.Set("Authorization", "Bearer "+app.twitchAccessToken)
 
-	res, err := app.httpClient.Do(req)
+	twitchRes, err := app.httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
 
-	if res.StatusCode == http.StatusUnauthorized {
-		res, err = app.reauthenticateAndRepeatTwitchRequest(req)
+	if twitchRes.StatusCode == http.StatusUnauthorized {
+		twitchRes, err = app.reauthenticateAndRepeatTwitchRequest(req)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	type ResponseBody struct {
-		Data []TwitchStream
-	}
-	var resBody ResponseBody
-	err = json.NewDecoder(res.Body).Decode(&resBody)
+	var twitchResDecoded TwitchStreamResponse
+	err = json.NewDecoder(twitchRes.Body).Decode(&twitchResDecoded)
 
-	return resBody.Data, err
+	res := StreamResponse{
+		Items:  twitchResDecoded.Data,
+		Cursor: twitchResDecoded.Pagination.Cursor,
+	}
+
+	return &res, err
 }
 
-var getTwitchChannelDataByLogin = func(login string, httpClient *http.Client) (models.Channel, error) {
+func (app *application) getTwitchChannelDataByLogin(login string, httpClient *http.Client) (models.Channel, error) {
 	var channel models.Channel
 	url := "https://api.twitch.tv/helix/users?login=" + login
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Set("Client-ID", "hmw2ygtkoc9si4001jxq2xmrmc8g99")
+	req.Header.Set("Authorization", "Bearer "+app.twitchAccessToken)
 	res, err := httpClient.Do(req)
 	if err != nil {
 		return channel, err

@@ -113,7 +113,7 @@ func (app *application) initVideoQuerying(w http.ResponseWriter, r *http.Request
 }
 
 func (app *application) queryVideoAPIs() (string, error) {
-	channels, err := app.channels.SelectFromAllCategories(0)
+	channels, err := app.channels.SelectForCrawling(0)
 	if err != nil {
 		return err.Error(), err
 	}

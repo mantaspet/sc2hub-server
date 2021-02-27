@@ -32,7 +32,7 @@ func (app *application) getAllArticles(w http.ResponseWriter, r *http.Request) {
 	var err error
 	from := parsePaginationParam(r.URL.Query().Get("from"))
 	if r.URL.Query().Get("recent") != "" {
-		articles, err = app.articles.SelectPage(9, 0, "")
+		articles, err = app.articles.SelectPage(7, 0, "")
 	} else {
 		articles, err = app.articles.SelectPage(models.ArticlePageLength, from, r.URL.Query().Get("query"))
 	}
@@ -99,12 +99,18 @@ func (app *application) crawlArticles() (string, error) {
 		return "", err
 	}
 
-	teamLiquidArticles, err := crawlers.TeamLiquidNews()
+	teamLiquidFeaturedNews, err := crawlers.TeamLiquidNews("https://tl.net/news/")
 	if err != nil {
 		return "", err
 	}
 
-	crawledArticles = append(crawledArticles, teamLiquidArticles...)
+	teamLiquidCommunityNews, err := crawlers.TeamLiquidNews("https://tl.net/news/community/")
+	if err != nil {
+		return "", err
+	}
+
+	crawledArticles = append(crawledArticles, teamLiquidFeaturedNews...)
+	crawledArticles = append(crawledArticles, teamLiquidCommunityNews...)
 
 	if len(crawledArticles) == 0 {
 		return "No articles found", nil
@@ -152,8 +158,7 @@ func (app *application) crawlArticles() (string, error) {
 		}
 
 		for _, ec := range ecs {
-			if strings.Contains(strings.ToLower(a.Title), ec.Pattern) ||
-				strings.Contains(strings.ToLower(a.Excerpt), ec.Pattern) {
+			if app.matchesPattern([]string{a.Title, a.Excerpt}, ec.IncludePatterns, ec.ExcludePatterns) {
 				ecArticle := models.EventCategoryArticle{
 					EventCategoryID: ec.ID,
 					ArticleID:       a.ID,

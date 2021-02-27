@@ -68,7 +68,7 @@ func (m *VideoModel) SelectRecent() ([]*models.Video, error) {
 	// I'm not 100% sold on this approach, but for the moment decided to go with this slightly weird statement
 	// and keep the code as dry as possible
 
-	return queryVideosPage(m.DB, stmt, 0, 15, 0, "")
+	return queryVideosPage(m.DB, stmt, 0, 7, 0, "")
 }
 
 func (m *VideoModel) SelectEventBroadcasts(categoryID int, date string) ([]*models.Video, error) {
@@ -133,7 +133,8 @@ func (m *VideoModel) InsertOrUpdateMany(videos []*models.Video) (int64, error) {
 			duration=VALUES(duration),
 			thumbnail_url=VALUES(thumbnail_url),
 			view_count=VALUES(view_count),
-			updated_at=VALUES(updated_at);`, strings.Join(valueStrings, ","))
+			updated_at=VALUES(updated_at),
+			created_at=VALUES(created_at);`, strings.Join(valueStrings, ","))
 
 	res, err := m.DB.Exec(stmt, valueArgs...)
 	if err != nil {

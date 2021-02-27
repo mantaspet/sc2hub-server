@@ -8,8 +8,8 @@ import (
 type ChannelModel struct{}
 
 var Channels = []*models.Channel{
-	{"42508152", 1, "starcraft", "StarCraft", "http://imageurl.com", "wcs", 1},
-	{"UCK5eBtuoj_HkdXKHNmBLAXg", 2, "", "AfreecaTV eSports", "http://imageurl.com", "gsl", 2},
+	{"42508152", 1, "starcraft", "StarCraft", "http://imageurl.com", true, "wcs", "", 1},
+	{"UCK5eBtuoj_HkdXKHNmBLAXg", 2, "", "AfreecaTV eSports", "http://imageurl.com", true, "gsl", "", 2},
 }
 
 func GetPlatformChannels(platformID int) []*models.Channel {
@@ -36,7 +36,7 @@ func (m *ChannelModel) SelectAllFromTwitch() ([]*models.Channel, error) {
 	return GetPlatformChannels(1), nil
 }
 
-func (m *ChannelModel) SelectFromAllCategories(platformID int) ([]*models.Channel, error) {
+func (m *ChannelModel) SelectForCrawling(platformID int) ([]*models.Channel, error) {
 	switch platformID {
 	case 1:
 		return GetPlatformChannels(1), nil

@@ -11,21 +11,27 @@ func (app *application) router() chi.Router {
 	r.Use(middleware.Logger)
 
 	r.Route("/articles", func(r chi.Router) {
+		r.Options("/*", app.genericPreflightHandler)
 		r.Get("/", app.getAllArticles)
 		r.Get("/crawl", isAuthenticated(app, app.initArticleCrawler))
 	})
 
 	r.Route("/channels", func(r chi.Router) {
-		r.Get("/twitch-livestreams", app.getLiveStreamingChannels)
+		r.Options("/*", app.genericPreflightHandler)
+		r.Get("/live", app.getLiveChannels)
+		r.Get("/live-registered", app.getLiveRegisteredChannels)
+		r.Put("/{id}", isAuthenticated(app, app.updateChannel))
 	})
 
 	r.Route("/events", func(r chi.Router) {
+		r.Options("/*", app.genericPreflightHandler)
 		r.Get("/", app.getEvents)
 		r.Get("/{id}", app.getEvent)
 		r.Get("/crawl", isAuthenticated(app, app.initEventCrawler))
 	})
 
 	r.Route("/event-categories", func(r chi.Router) {
+		r.Options("/*", app.genericPreflightHandler)
 		r.Get("/", app.getEventCategories)
 		r.Get("/{id}", app.getEventCategory)
 		r.Get("/{id}/videos", app.getVideosByCategory)
@@ -43,24 +49,29 @@ func (app *application) router() chi.Router {
 	})
 
 	r.Route("/players", func(r chi.Router) {
+		r.Options("/*", app.genericPreflightHandler)
 		r.Get("/", app.getAllPlayers)
 		r.Get("/{id}", app.getPlayer)
 		r.Get("/ids", app.getAllPlayerIDs)
 		r.Get("/crawl", isAuthenticated(app, app.initPlayerCrawler))
 		r.Get("/{id}/videos", app.getVideosByPlayer)
 		r.Get("/{id}/articles", app.getArticlesByPlayer)
+		r.Options("/*", app.genericPreflightHandler)
 	})
 
 	r.Route("/videos", func(r chi.Router) {
+		r.Options("/*", app.genericPreflightHandler)
 		r.Get("/", app.getAllVideos)
 		r.Get("/query-apis", isAuthenticated(app, app.initVideoQuerying))
 	})
 
 	r.Route("/twitch", func(r chi.Router) {
+		r.Options("/*", app.genericPreflightHandler)
 		r.Get("/app-access-token", app.getTwitchAppAccessToken)
 	})
 
 	r.Route("/auth", func(r chi.Router) {
+		r.Options("/*", app.genericPreflightHandler)
 		r.Post("/token", app.getAccessToken)
 		r.Options("/*", app.genericPreflightHandler)
 	})

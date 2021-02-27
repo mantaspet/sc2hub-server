@@ -140,7 +140,7 @@ func TestEventCategoryModel_Insert(t *testing.T) {
 	}
 
 	newCategory := &models.EventCategory{
-		ID: 4, Name: "World Electronic Sports Games", Pattern: "wesg", InfoURL: "https://infourl.com",
+		ID: 4, Name: "World Electronic Sports Games", IncludePatterns: "wesg", InfoURL: "https://infourl.com",
 		ImageURL: "http://imageurl.com", Description: "", Priority: 4,
 	}
 
@@ -190,7 +190,7 @@ func TestEventCategoryModel_Update(t *testing.T) {
 	}
 
 	updatedCategory := &models.EventCategory{
-		ID: 3, Name: "World Electronic Sports Games", Pattern: "wesg", InfoURL: "https://infourl.com",
+		ID: 3, Name: "World Electronic Sports Games", IncludePatterns: "wesg", InfoURL: "https://infourl.com",
 		ImageURL: "http://imageurl.com", Description: "", Priority: 3,
 	}
 

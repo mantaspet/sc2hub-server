@@ -7,9 +7,8 @@ import (
 	"time"
 )
 
-func TeamLiquidNews() ([]models.Article, error) {
+func TeamLiquidNews(url string) ([]models.Article, error) {
 	var articles []models.Article
-	url := "https://tl.net/news/"
 	c := colly.NewCollector()
 
 	c.OnHTML(".findex_newsblock tr", func(el *colly.HTMLElement) {

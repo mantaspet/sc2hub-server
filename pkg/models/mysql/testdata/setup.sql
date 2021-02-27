@@ -13,18 +13,17 @@ create table articles
 
 create table event_categories
 (
-    id int unsigned auto_increment
+    id               int unsigned auto_increment
         primary key,
-    name varchar(191) not null,
-    pattern varchar(191) not null,
-    info_url text null,
-    image_url text null,
-    description text null,
-    priority int unsigned not null,
+    name             varchar(191) not null,
+    include_patterns varchar(255) not null,
+    exclude_patterns varchar(255) not null,
+    info_url         text         null,
+    image_url        text         null,
+    description      text         null,
+    priority         int unsigned not null,
     constraint event_categories_name_uindex
-        unique (name),
-    constraint event_categories_pattern_uindex
-        unique (pattern)
+        unique (name)
 );
 
 create table event_category_articles
@@ -62,22 +61,22 @@ create table platforms
 
 create table channels
 (
-    id varchar(64) not null
+    id                  varchar(64)                not null
         primary key,
-    platform_id int unsigned not null,
-    login varchar(255) default '' not null,
-    title varchar(255) not null,
-    profile_image_url text not null,
+    platform_id         int unsigned               not null,
+    login               varchar(255) default ''    not null,
+    title               varchar(255)               not null,
+    profile_image_url   text                       not null,
+    is_crawling_enabled bool         default false not null,
     constraint channels_platforms_id_fk
         foreign key (platform_id) references platforms (id)
 );
 
 create table event_category_channels
 (
-    id int unsigned auto_increment
-        primary key,
     event_category_id int unsigned not null,
     channel_id varchar(64) not null,
+    primary key (event_category_id, channel_id),
     constraint event_category_channels_channels_id_fk
         foreign key (channel_id) references channels (id),
     constraint event_category_channels_event_categories_id_fk

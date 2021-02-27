@@ -8,13 +8,17 @@ import (
 )
 
 type application struct {
-	httpClient        *http.Client
-	db                *sql.DB // TODO find a better solution. This is used only in pkg validators SQLUnique function
-	origin            string
-	twitchAccessToken string
-	errorLog          *log.Logger
-	infoLog           *log.Logger
-	events            interface {
+	httpClient         *http.Client
+	db                 *sql.DB // TODO find a better solution. This is used only in pkg validators SQLUnique function
+	appOrigin          string
+	adminOrigin        string
+	twitchAccessToken  string
+	twitchClientId     string
+	twitchClientSecret string
+	errorLog           *log.Logger
+	infoLog            *log.Logger
+	twitchGameId       int
+	events             interface {
 		SelectInDateRange(dateFrom string, dateTo string) ([]*models.Event, error)
 		SelectOne(id string) (*models.Event, error)
 		InsertMany(events []models.Event) (int64, error)
@@ -57,10 +61,11 @@ type application struct {
 		InsertMany(articles []models.Article) (int64, error)
 	}
 	channels interface {
-		SelectFromAllCategories(platformID int) ([]*models.Channel, error)
+		SelectForCrawling(platformID int) ([]*models.Channel, error)
 		SelectAllFromTwitch() ([]*models.Channel, error)
 		SelectByCategory(categoryID int, platformID int) ([]*models.Channel, error)
 		Insert(channel models.Channel, categoryID int) (*models.Channel, error)
+		Update(channel models.Channel) (*models.Channel, error)
 		DeleteFromCategory(channelID string, categoryID int) error
 	}
 	users interface {
