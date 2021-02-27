@@ -61,12 +61,13 @@ create table platforms
 
 create table channels
 (
-    id varchar(64) not null
+    id                  varchar(64)                not null
         primary key,
-    platform_id int unsigned not null,
-    login varchar(255) default '' not null,
-    title varchar(255) not null,
-    profile_image_url text not null,
+    platform_id         int unsigned               not null,
+    login               varchar(255) default ''    not null,
+    title               varchar(255)               not null,
+    profile_image_url   text                       not null,
+    is_crawling_enabled bool         default false not null,
     constraint channels_platforms_id_fk
         foreign key (platform_id) references platforms (id)
 );

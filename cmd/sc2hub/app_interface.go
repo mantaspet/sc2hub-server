@@ -60,10 +60,11 @@ type application struct {
 		InsertMany(articles []models.Article) (int64, error)
 	}
 	channels interface {
-		SelectFromAllCategories(platformID int) ([]*models.Channel, error)
+		SelectForCrawling(platformID int) ([]*models.Channel, error)
 		SelectAllFromTwitch() ([]*models.Channel, error)
 		SelectByCategory(categoryID int, platformID int) ([]*models.Channel, error)
 		Insert(channel models.Channel, categoryID int) (*models.Channel, error)
+		Update(channel models.Channel) (*models.Channel, error)
 		DeleteFromCategory(channelID string, categoryID int) error
 	}
 	users interface {

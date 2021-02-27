@@ -20,6 +20,7 @@ func (app *application) router() chi.Router {
 		r.Options("/*", app.genericPreflightHandler)
 		r.Get("/live", app.getLiveChannels)
 		r.Get("/live-registered", app.getLiveRegisteredChannels)
+		r.Put("/{id}", isAuthenticated(app, app.updateChannel))
 	})
 
 	r.Route("/events", func(r chi.Router) {

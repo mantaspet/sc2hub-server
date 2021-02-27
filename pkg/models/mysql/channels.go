@@ -37,19 +37,21 @@ func (m *ChannelModel) SelectAllFromTwitch() ([]*models.Channel, error) {
 	return channels, nil
 }
 
-func (m *ChannelModel) SelectFromAllCategories(platformID int) ([]*models.Channel, error) {
+func (m *ChannelModel) SelectForCrawling(platformID int) ([]*models.Channel, error) {
 	stmt := `
 		SELECT channels.id, channels.platform_id, event_categories.id, event_categories.include_patterns, event_categories.exclude_patterns
 		FROM event_category_channels
 		INNER JOIN channels
 		ON event_category_channels.channel_id = channels.id
 		INNER JOIN event_categories
-		ON event_category_channels.event_category_id = event_categories.id`
+		ON event_category_channels.event_category_id = event_categories.id
+		WHERE is_crawling_enabled = 1
+	`
 
 	if platformID > 0 {
-		stmt += " WHERE platform_id=?"
+		stmt += " AND platform_id=?"
 	} else {
-		stmt += " WHERE -1<>?"
+		stmt += " AND -1<>?"
 	}
 
 	stmt += ` ORDER BY event_categories.priority`
@@ -79,7 +81,7 @@ func (m *ChannelModel) SelectFromAllCategories(platformID int) ([]*models.Channe
 func (m *ChannelModel) SelectByCategory(categoryID int, platformID int) ([]*models.Channel, error) {
 	stmt := `
 		SELECT channels.id, channels.platform_id, channels.login, channels.title,
-		       COALESCE(channels.profile_image_url, '')
+		       COALESCE(channels.profile_image_url, ''), channels.is_crawling_enabled
 		FROM channels
 		INNER JOIN event_category_channels
 		ON event_category_channels.channel_id=channels.id
@@ -104,7 +106,7 @@ func (m *ChannelModel) SelectByCategory(categoryID int, platformID int) ([]*mode
 	channels := []*models.Channel{}
 	for rows.Next() {
 		channel := &models.Channel{}
-		err := rows.Scan(&channel.ID, &channel.PlatformID, &channel.Login, &channel.Title, &channel.ProfileImageURL)
+		err := rows.Scan(&channel.ID, &channel.PlatformID, &channel.Login, &channel.Title, &channel.ProfileImageURL, &channel.IsCrawlingEnabled)
 		if err != nil {
 			return nil, err
 		}
@@ -124,11 +126,11 @@ func (m *ChannelModel) Insert(channel models.Channel, categoryID int) (*models.C
 		return nil, err
 	}
 
-	insertStmt := `INSERT INTO	channels (id, platform_id, login, title, profile_image_url)
-		VALUES (?, ?, ?, ?, ?)
+	insertStmt := `INSERT INTO	channels (id, platform_id, login, title, profile_image_url, is_crawling_enabled)
+		VALUES (?, ?, ?, ?, ?, ?)
 		ON DUPLICATE KEY UPDATE title=VALUES(title), profile_image_url=VALUES(profile_image_url);`
 
-	_, err = tx.Exec(insertStmt, channel.ID, channel.PlatformID, channel.Login, channel.Title, channel.ProfileImageURL)
+	_, err = tx.Exec(insertStmt, channel.ID, channel.PlatformID, channel.Login, channel.Title, channel.ProfileImageURL, channel.IsCrawlingEnabled)
 	if err != nil {
 		return nil, err
 	}
@@ -141,12 +143,12 @@ func (m *ChannelModel) Insert(channel models.Channel, categoryID int) (*models.C
 	}
 
 	selectStmt := `
-		SELECT id, platform_id, login, title, COALESCE(profile_image_url, '')
+		SELECT id, platform_id, login, title, COALESCE(profile_image_url, ''), is_crawling_enabled
 		FROM channels
 		WHERE id=?`
 
 	res := &models.Channel{}
-	err = tx.QueryRow(selectStmt, channel.ID).Scan(&res.ID, &res.PlatformID, &res.Login, &res.Title, &res.ProfileImageURL)
+	err = tx.QueryRow(selectStmt, channel.ID).Scan(&res.ID, &res.PlatformID, &res.Login, &res.Title, &res.ProfileImageURL, &res.IsCrawlingEnabled)
 	if err != nil {
 		_ = tx.Rollback()
 		return res, err
@@ -154,6 +156,31 @@ func (m *ChannelModel) Insert(channel models.Channel, categoryID int) (*models.C
 
 	err = tx.Commit()
 	return res, err
+}
+
+func (m *ChannelModel) Update(channel models.Channel) (*models.Channel, error) {
+	updateStmt := `
+		UPDATE channels
+		SET is_crawling_enabled=?
+		WHERE id=?`
+
+	selectStmt := `
+		SELECT id, platform_id, login, title, COALESCE(profile_image_url, ''), is_crawling_enabled
+		FROM channels
+		WHERE id=?`
+
+	_, err := m.DB.Exec(updateStmt, channel.IsCrawlingEnabled, channel.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	res := &models.Channel{}
+	err = m.DB.QueryRow(selectStmt, channel.ID).Scan(&res.ID, &res.PlatformID, &res.Login, &res.Title, &res.ProfileImageURL, &res.IsCrawlingEnabled)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }
 
 func (m *ChannelModel) DeleteFromCategory(channelID string, categoryID int) error {

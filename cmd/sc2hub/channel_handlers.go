@@ -74,6 +74,28 @@ func (app *application) getLiveRegisteredChannels(w http.ResponseWriter, r *http
 	app.json(w, liveStreams)
 }
 
+func (app *application) updateChannel(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	var channel models.Channel
+	err := json.NewDecoder(r.Body).Decode(&channel)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest, err)
+		return
+	}
+	channel.ID = id
+
+	res, err := app.channels.Update(channel)
+	if err == models.ErrNotFound {
+		app.clientError(w, http.StatusNotFound, errors.New("channel with a specified ID does not exist"))
+		return
+	} else if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	app.json(w, res)
+}
+
 // checks if URL points to a valid twitch or youtube channel,
 // fetches it's data from twitch or youtube api,
 // stores it inside our database
