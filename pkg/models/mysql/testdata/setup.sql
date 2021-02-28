@@ -85,19 +85,19 @@ create table event_category_channels
 
 create table players
 (
-    id int unsigned auto_increment
+    id             int unsigned auto_increment
         primary key,
-    player_id varchar(191) not null,
-    name varchar(255) default '' not null,
-    race varchar(8) not null,
-    team varchar(255) default '' not null,
-    country varchar(255) default '' not null,
-    total_earnings decimal default 0 not null,
-    date_of_birth date null,
-    liquipedia_url text null,
-    image_url text null,
-    stream_url text null,
-    is_retired tinyint(1) default 0 not null,
+    player_id      varchar(191)            not null,
+    name           varchar(255) default '' not null,
+    race           varchar(32)             not null,
+    team           varchar(255) default '' not null,
+    country        varchar(255) default '' not null,
+    total_earnings decimal      default 0  not null,
+    date_of_birth  date                    null,
+    liquipedia_url text                    null,
+    image_url      text                    null,
+    stream_url     text                    null,
+    is_retired     tinyint(1)   default 0  not null,
     constraint players_player_id_name_uindex
         unique (player_id, name(64))
 );
