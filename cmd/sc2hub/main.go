@@ -110,7 +110,7 @@ func main() {
 
 		srv.TLSConfig = &tls.Config{GetCertificate: certManager.GetCertificate}
 		infoLog.Printf("Starting server on %s", flgAddr)
-		go http.ListenAndServe(":80", certManager.HTTPHandler(nil))
+		go http.ListenAndServe(":81", certManager.HTTPHandler(nil))
 		err = srv.ListenAndServeTLS("", "")
 		if err != nil {
 			errorLog.Fatal(err)
