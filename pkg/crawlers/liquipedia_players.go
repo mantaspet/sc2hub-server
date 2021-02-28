@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gocolly/colly"
 	"github.com/mantaspet/sc2hub-server/pkg/models"
+	"strings"
 )
 
 func LiquipediaPlayers(region string) ([]models.Player, error) {
@@ -22,9 +23,12 @@ func LiquipediaPlayers(region string) ([]models.Player, error) {
 				p.LiquipediaURL = el.ChildAttr("td:first-child a", "href")
 				p.Name = el.ChildText("td:nth-of-type(2)")
 				p.Team = el.ChildText("td:nth-of-type(3) a")
-				p.Country = el.ChildText("td:nth-of-type(4)")
-				p.Race = el.ChildText("td:nth-of-type(5)")
-				p.StreamURL = el.ChildAttr("td:nth-of-type(6) a", "href")
+				p.Race = el.ChildText("td:nth-of-type(4)")
+				var urls []string
+				el.ForEach("td:nth-of-type(5) a", func(j int, link *colly.HTMLElement) {
+					urls = append(urls, link.Attr("href"))
+				})
+				p.StreamURL = strings.Join(urls, ", ")
 			}
 			if p.PlayerID != "" {
 				players = append(players, p)
