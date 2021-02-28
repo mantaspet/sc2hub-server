@@ -154,3 +154,6 @@ create table users
     constraint users_username_uindex
         unique (username)
 );
+
+INSERT INTO sc2hub.platforms (id, name) VALUES (1, 'twitch');
+INSERT INTO sc2hub.platforms (id, name) VALUES (2, 'youtube');
